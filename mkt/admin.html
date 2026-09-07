@@ -125,6 +125,77 @@ button{font-family:inherit}
 .dact .sp{margin-left:auto}
 .blank{display:grid;place-items:center;height:100%;min-height:200px;
   color:var(--faint);font-size:13.5px;text-align:center;line-height:1.9}
+/* ── 탭 ── */
+.tabs{display:flex;gap:2px;margin-left:20px}
+.tab{background:transparent;border:0;border-bottom:2px solid transparent;
+  color:var(--faint);font-family:var(--m);font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;padding:19px 14px;cursor:pointer;transition:.15s}
+.tab:hover{color:var(--dim)}
+.tab[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--red-lift)}
+
+/* ── 클라이언트 ── */
+.cwrap{display:grid;grid-template-columns:minmax(240px,300px) 1fr;
+  height:calc(100dvh - 58px)}
+.clist{border-right:1px solid var(--rule);overflow-y:auto}
+.cedit{overflow-y:auto;padding:28px clamp(20px,4vw,44px) 80px}
+@media (max-width:860px){
+  .cwrap{grid-template-columns:1fr;height:auto}
+  .clist{border-right:0;border-bottom:1px solid var(--rule);max-height:36dvh}
+  .cedit{padding:22px 20px 60px}
+}
+.cnew{width:100%;padding:14px 20px;background:transparent;border:0;
+  border-bottom:1px solid var(--rule);color:var(--red-lift);cursor:pointer;
+  font-family:var(--m);font-size:11.5px;letter-spacing:.1em;text-align:left}
+.cnew:hover{background:var(--panel)}
+.citem{display:block;width:100%;text-align:left;background:transparent;border:0;
+  border-bottom:1px solid var(--rule);padding:13px 20px;cursor:pointer;
+  border-left:2px solid transparent;transition:background .15s}
+.citem:hover{background:var(--panel)}
+.citem[aria-current="true"]{background:var(--panel-2);border-left-color:var(--red-lift)}
+.citem .cn{font-weight:700;font-size:14.5px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.citem .cs{font-family:var(--m);font-size:11px;color:var(--faint);margin-top:4px;
+  display:flex;gap:8px;align-items:center}
+
+.sec{margin-bottom:34px}
+.sec>h3{font-family:var(--m);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--faint);padding-bottom:10px;border-bottom:1px solid var(--rule);margin-bottom:18px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.grid2 .fld input{padding:10px 12px;font-size:14px}
+.hint{font-size:12.5px;color:var(--faint);line-height:1.7;margin-top:10px}
+.hint code{font-family:var(--m);font-size:11.5px;background:var(--panel-2);padding:1px 5px}
+
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px}
+.chk{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--dim);cursor:pointer}
+.chk input{accent-color:var(--red-lift);width:15px;height:15px;flex:none}
+
+.ctable{width:100%;border-collapse:collapse;min-width:900px}
+.ctable th{font-family:var(--m);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--faint);text-align:left;padding:8px 6px;border-bottom:1px solid var(--rule);font-weight:500}
+.ctable td{padding:4px 6px;border-bottom:1px solid var(--rule)}
+.ctable input,.ctable select{width:100%;background:transparent;border:1px solid transparent;
+  color:var(--tx);font-family:var(--f);font-size:13px;padding:7px 8px}
+.ctable input:hover,.ctable select:hover{border-color:var(--rule-2)}
+.ctable input:focus,.ctable select:focus{outline:none;border-color:var(--gold);background:var(--panel)}
+.ctable select{color-scheme:dark}
+.ctable .rm{background:transparent;border:1px solid var(--rule-2);color:var(--faint);
+  cursor:pointer;padding:5px 9px;font-size:11px;line-height:1}
+.ctable .rm:hover{border-color:var(--red-lift);color:var(--red-lift)}
+.tscroll{overflow-x:auto;border:1px solid var(--rule);background:var(--panel)}
+textarea.paste{width:100%;min-height:110px;background:var(--panel);color:var(--tx);
+  border:1px solid var(--rule-2);padding:12px;font-family:var(--m);font-size:12.5px;
+  line-height:1.7;resize:vertical}
+textarea.paste:focus{outline:none;border-color:var(--gold)}
+
+.savebar{position:sticky;bottom:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  padding:16px 0;margin-top:8px;background:linear-gradient(transparent,var(--bg) 22%)}
+.savebar .sp{margin-left:auto}
+.acct{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  background:var(--panel);border:1px solid var(--rule);padding:14px 16px}
+.acct .st{font-family:var(--m);font-size:11.5px;color:var(--dim);flex:1;min-width:180px}
+.acct .st b{color:var(--ok)}
+.pwout{font-family:var(--m);font-size:13px;background:var(--panel-2);border:1px solid var(--gold);
+  padding:10px 13px;color:var(--gold);word-break:break-all;margin-top:12px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:60;
   background:var(--panel-2);border:1px solid var(--rule-2);padding:11px 18px;
   font-size:13.5px;box-shadow:0 8px 28px rgba(0,0,0,.5)}
@@ -153,12 +224,17 @@ button{font-family:inherit}
 <!-- ══════════ 관리 화면 ══════════ -->
 <div id="app" hidden>
   <header class="top">
-    <span class="brand"><b>8LABS</b> · 문의 관리</span>
+    <span class="brand"><b>8LABS</b> · 관리</span>
+    <div class="tabs" role="tablist">
+      <button class="tab" id="t-inq" role="tab" aria-selected="true">문의</button>
+      <button class="tab" id="t-cli" role="tab" aria-selected="false">클라이언트</button>
+    </div>
     <span class="who" id="who"></span>
     <button class="btn btn--ghost" id="reload">새로고침</button>
     <button class="btn btn--ghost" id="logout">로그아웃</button>
   </header>
 
+  <section id="tab-inq">
   <div class="bar">
     <button class="chip" data-f="all" aria-pressed="true">전체</button>
     <button class="chip" data-f="received" aria-pressed="false">접수됨</button>
@@ -172,6 +248,20 @@ button{font-family:inherit}
       <div class="blank">왼쪽에서 문의를 선택하세요.</div>
     </div>
   </div>
+  </section>
+
+  <!-- ══════════ 클라이언트 ══════════ -->
+  <section id="tab-cli" hidden>
+    <div class="cwrap">
+      <div class="clist">
+        <button class="cnew" id="c-new">+ 새 클라이언트</button>
+        <div id="c-list"></div>
+      </div>
+      <div class="cedit" id="c-edit">
+        <div class="blank">왼쪽에서 클라이언트를 선택하거나 새로 추가하세요.</div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <script type="module">
@@ -404,6 +494,414 @@ async function remove(id, label){
     toast('삭제에 실패했습니다. (' + (err.code || err.message) + ')');
   }
 }
+/* ══════════════════════════════════════════════════════════════
+   클라이언트 · 캠페인 관리
+   clients/{id}  meta · config · package · ownerUid
+   clients/{id}/creators/{k}
+   ══════════════════════════════════════════════════════════════ */
+const KO_STATUS = {
+  '확정':'confirmed','컨택':'confirmed','섭외':'confirmed',
+  '방문완료':'visited','방문 완료':'visited','방문':'visited',
+  '업로드완료':'published','업로드 완료':'published','업로드':'published','발행':'published'
+};
+const ST_LABEL = { confirmed:'확정', visited:'방문 완료', published:'업로드 완료' };
+const KPI_KEYS = [['creators','대상 크리에이터'],['visited','방문 완료'],['published','업로드 완료'],
+                  ['views','누적 조회수'],['avg','평균 조회수']];
+const COL_KEYS = [['round','회차'],['handle','크리에이터'],['followers','팔로워'],['platform','플랫폼'],
+                  ['status','상태'],['visit','방문일'],['post','업로드일'],['views','조회수'],['url','콘텐츠']];
+
+let CLIENTS = [], curId = null, cur = null, curCreators = [], newPw = '';
+
+$('#t-inq').addEventListener('click', () => switchTab('inq'));
+$('#t-cli').addEventListener('click', () => switchTab('cli'));
+function switchTab(t){
+  $('#t-inq').setAttribute('aria-selected', String(t==='inq'));
+  $('#t-cli').setAttribute('aria-selected', String(t==='cli'));
+  $('#tab-inq').hidden = t !== 'inq';
+  $('#tab-cli').hidden = t !== 'cli';
+  if (t === 'cli' && !CLIENTS.length) loadClients();
+}
+
+async function loadClients(){
+  $('#c-list').innerHTML = '<div class="empty">불러오는 중…</div>';
+  try {
+    const snap = await F.getDocs(F.collection(db, 'clients'));
+    CLIENTS = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ko'));
+    renderClients();
+  } catch (err) {
+    $('#c-list').innerHTML = '<div class="empty">' +
+      (err.code === 'permission-denied' ? '권한이 없습니다. 규칙의 staff 등록을 확인해주세요.'
+                                        : '불러오지 못했습니다. (' + esc(err.code) + ')') + '</div>';
+  }
+}
+
+function renderClients(){
+  $('#c-list').innerHTML = CLIENTS.length ? CLIENTS.map(c => `
+    <button class="citem" data-id="${esc(c.id)}" aria-current="${c.id === curId}">
+      <div class="cn">${esc(c.name || '(이름 없음)')}</div>
+      <div class="cs">
+        <span>${esc((c.package && c.package.name) || '패키지 미설정')}</span>
+        ${c.ownerUid ? '<span style="color:var(--ok)">● 계정</span>' : '<span>계정 없음</span>'}
+      </div>
+    </button>`).join('') : '<div class="empty">등록된 클라이언트가 없습니다.</div>';
+  $('#c-list').querySelectorAll('.citem').forEach(b =>
+    b.addEventListener('click', () => openClient(b.dataset.id)));
+}
+
+$('#c-new').addEventListener('click', () => {
+  curId = null;
+  cur = { name:'', ownerUid:null, ownerEmail:'',
+          package:{ name:'', rounds:'', creatorCount:'', note:'' },
+          meta:{ title:'', brand:'', campaign:'', period:'', platform:'Instagram · TikTok', manager:'Eight Labs' },
+          config:{ kpis:{}, cols:{}, pipeline:true, rounds:true, dates:true } };
+  curCreators = []; newPw = '';
+  $('#c-list').querySelectorAll('.citem').forEach(b => b.setAttribute('aria-current','false'));
+  renderEditor();
+});
+
+async function openClient(id){
+  const c = CLIENTS.find(x => x.id === id);
+  if (!c) return;
+  curId = id; newPw = '';
+  cur = JSON.parse(JSON.stringify({
+    name: c.name || '', ownerUid: c.ownerUid || null, ownerEmail: c.ownerEmail || '',
+    package: c.package || {}, meta: c.meta || {}, config: c.config || {}
+  }));
+  $('#c-list').querySelectorAll('.citem').forEach(b =>
+    b.setAttribute('aria-current', String(b.dataset.id === id)));
+  $('#c-edit').innerHTML = '<div class="blank">불러오는 중…</div>';
+  try {
+    const cs = await F.getDocs(F.collection(db, 'clients', id, 'creators'));
+    curCreators = cs.docs.map(d => ({ _id: d.id, ...d.data() }))
+      .sort((a,b) => (a.round||0)-(b.round||0) || (a.order||0)-(b.order||0));
+  } catch (e) { curCreators = []; }
+  renderEditor();
+}
+
+const val = (o,p,d='') => p.split('.').reduce((a,k)=> (a && a[k] !== undefined && a[k] !== null) ? a[k] : undefined, o) ?? d;
+const F1 = (lb, path, ph='') =>
+  `<div class="fld"><label>${lb}</label><input data-p="${path}" value="${esc(val(cur,path))}" placeholder="${esc(ph)}"></div>`;
+
+function renderEditor(){
+  const linked = !!cur.ownerUid;
+  $('#c-edit').innerHTML = `
+    <div class="sec">
+      <h3>${curId ? '기본 정보' : '새 클라이언트'}</h3>
+      <div class="grid2">
+        ${F1('업체명 *','name','예: 루미에르 코스메틱')}
+        ${F1('대시보드 제목','meta.title','예: 루미에르 캠페인')}
+        ${F1('브랜드','meta.brand')}
+        ${F1('캠페인','meta.campaign','매장 방문 시딩 · 3회차')}
+        ${F1('기간','meta.period','2026.07.17 – 08.27')}
+        ${F1('플랫폼','meta.platform','Instagram · TikTok')}
+        ${F1('담당','meta.manager','Eight Labs')}
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>패키지</h3>
+      <div class="grid2">
+        ${F1('패키지명','package.name','예: Growth · 매장 방문 시딩')}
+        ${F1('회차 수','package.rounds','3')}
+        ${F1('크리에이터 인원','package.creatorCount','30')}
+        ${F1('비고','package.note','선택')}
+      </div>
+      <p class="hint">금액은 저장하지 않습니다. 클라이언트 화면에는 패키지명 · 회차 · 인원 · 업로드 진행률만 표시됩니다.</p>
+    </div>
+
+    <div class="sec">
+      <h3>클라이언트 계정</h3>
+      <div class="acct">
+        <span class="st">${linked
+          ? `<b>연결됨</b> · ${esc(cur.ownerEmail || '')}`
+          : '아직 계정이 없습니다. 이메일을 넣고 계정을 만들어주세요.'}</span>
+        ${linked
+          ? '<button class="btn btn--ghost" id="c-reset">비밀번호 재설정 메일</button>'
+          : ''}
+      </div>
+      ${linked ? '' : `
+      <div class="grid2" style="margin-top:14px">
+        <div class="fld"><label>로그인 이메일</label>
+          <input id="c-email" type="email" value="${esc(cur.ownerEmail || '')}" placeholder="client@brand.com"></div>
+        <div class="fld"><label>비밀번호</label>
+          <input id="c-pw" type="text" value="" placeholder="10자 이상"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn--ghost" id="c-genpw">비밀번호 자동 생성</button>
+        <button class="btn" id="c-mkacct">계정 만들기</button>
+      </div>`}
+      ${newPw ? `<div class="pwout">발급 완료 · 이 비밀번호는 다시 볼 수 없습니다. 지금 복사해 전달하세요.<br><br>${esc(cur.ownerEmail)}<br>${esc(newPw)}</div>` : ''}
+    </div>
+
+    <div class="sec">
+      <h3>표시 항목</h3>
+      <p class="hint" style="margin:0 0 14px">체크를 끄면 클라이언트 화면에서 숨겨집니다.</p>
+      <div style="margin-bottom:16px">
+        <div class="hint" style="margin:0 0 8px">KPI 카드</div>
+        <div class="checks">${KPI_KEYS.map(([k,lb]) =>
+          `<label class="chk"><input type="checkbox" data-kpi="${k}" ${val(cur,'config.kpis.'+k,true)!==false?'checked':''}>${lb}</label>`).join('')}</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div class="hint" style="margin:0 0 8px">표 컬럼</div>
+        <div class="checks">${COL_KEYS.map(([k,lb]) =>
+          `<label class="chk"><input type="checkbox" data-col="${k}" ${val(cur,'config.cols.'+k,true)!==false?'checked':''}>${lb}</label>`).join('')}</div>
+      </div>
+      <div>
+        <div class="hint" style="margin:0 0 8px">섹션</div>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" data-sec="pipeline" ${val(cur,'config.pipeline',true)!==false?'checked':''}>섭외 파이프라인</label>
+          <label class="chk"><input type="checkbox" data-sec="rounds" ${val(cur,'config.rounds',true)!==false?'checked':''}>회차별 필터</label>
+          <label class="chk"><input type="checkbox" data-sec="dates" ${val(cur,'config.dates',true)!==false?'checked':''}>기간별 필터</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>크리에이터 · ${curCreators.length}명</h3>
+      <textarea class="paste" id="c-paste" placeholder="엑셀에서 복사해 붙여넣으세요 (탭 또는 두 칸 이상 공백 구분)
+@handle	147000	Instagram	업로드완료	2026-07-19	2026-07-24	396000	https://...
+@handle2	7855	Instagram	방문완료	2026-07-17"></textarea>
+      <div style="display:flex;gap:10px;margin:12px 0 20px;flex-wrap:wrap">
+        <button class="btn btn--ghost" id="c-add">추가</button>
+        <button class="btn btn--ghost" id="c-replace">전체 교체</button>
+        <button class="btn btn--ghost" id="c-row">+ 빈 행</button>
+      </div>
+      <div class="tscroll">
+        <table class="ctable">
+          <thead><tr><th>회차</th><th>크리에이터</th><th>팔로워</th><th>플랫폼</th><th>상태</th>
+            <th>방문일</th><th>업로드일</th><th>조회수</th><th>링크</th><th></th></tr></thead>
+          <tbody id="c-rows"></tbody>
+        </table>
+      </div>
+      <p class="hint">상태: 확정 / 방문완료 / 업로드완료. 크리에이터명이 <code>@</code>로 시작하지 않으면
+        클라이언트 화면에서 회색 처리됩니다 (섭외 진행 중 표시용).</p>
+    </div>
+
+    <div class="savebar">
+      <button class="btn" id="c-save">저장</button>
+      <span class="mono" style="font-size:12px;color:var(--faint)" id="c-state"></span>
+      ${curId ? '<button class="btn btn--danger sp" id="c-del">클라이언트 삭제</button>' : ''}
+    </div>`;
+
+  renderRows();
+  bindEditor();
+}
+
+function renderRows(){
+  $('#c-rows').innerHTML = curCreators.map((r,i) => `
+    <tr data-i="${i}">
+      <td style="width:60px"><input data-f="round" value="${esc(r.round ?? 1)}"></td>
+      <td style="min-width:170px"><input data-f="handle" value="${esc(r.handle ?? '')}"></td>
+      <td style="width:100px"><input data-f="followers" value="${esc(r.followers ?? '')}"></td>
+      <td style="width:110px"><select data-f="platform">
+        <option${r.platform==='Instagram'?' selected':''}>Instagram</option>
+        <option${r.platform==='TikTok'?' selected':''}>TikTok</option>
+        <option${r.platform==='YouTube'?' selected':''}>YouTube</option></select></td>
+      <td style="width:120px"><select data-f="status">
+        ${Object.entries(ST_LABEL).map(([k,v]) =>
+          `<option value="${k}"${(r.status||'confirmed')===k?' selected':''}>${v}</option>`).join('')}</select></td>
+      <td style="width:130px"><input data-f="visit" type="date" value="${esc(r.visit ?? '')}"></td>
+      <td style="width:130px"><input data-f="post" type="date" value="${esc(r.post ?? '')}"></td>
+      <td style="width:100px"><input data-f="views" value="${esc(r.views ?? '')}"></td>
+      <td style="min-width:120px"><input data-f="url" value="${esc(r.url ?? '')}" placeholder="https://"></td>
+      <td style="width:40px"><button class="rm" data-rm="${i}">✕</button></td>
+    </tr>`).join('') ||
+    '<tr><td colspan="10" style="padding:26px;color:var(--faint);font-size:13px">아직 없습니다. 위에 붙여넣거나 빈 행을 추가하세요.</td></tr>';
+
+  $('#c-rows').querySelectorAll('input,select').forEach(el => {
+    el.addEventListener('input', e => {
+      const i = +e.target.closest('tr').dataset.i, f = e.target.dataset.f;
+      let v = e.target.value.trim();
+      if (f === 'round' || f === 'followers' || f === 'views') v = v === '' ? null : Number(v.replace(/,/g,''));
+      curCreators[i][f] = v === '' ? null : v;
+      mark();
+    });
+  });
+  $('#c-rows').querySelectorAll('.rm').forEach(b =>
+    b.addEventListener('click', () => { curCreators.splice(+b.dataset.rm, 1); renderRows(); mark(); }));
+}
+
+function mark(){ const el = $('#c-state'); if (el) el.textContent = '저장하지 않은 변경'; }
+
+function parsePaste(text){
+  return text.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map((line, i) => {
+    const p = line.split(/\t|\s{2,}/).map(x => x.trim()).filter(x => x !== '');
+    const num = v => { if (!v) return null; const n = Number(String(v).replace(/[,\s]/g,'')); return isNaN(n) ? null : n; };
+    let round = 1, k = 0;
+    if (/^\d+차?$/.test(p[0]) && p[1] && !/^\d/.test(p[1])) { round = parseInt(p[0]); k = 1; }
+    const handle = p[k] || '';
+    const rest = p.slice(k + 1);
+    const st = rest.find(x => KO_STATUS[x] || ['confirmed','visited','published'].includes(x));
+    const dates = rest.filter(x => /^\d{4}-\d{2}-\d{2}$/.test(x));
+    const plat = rest.find(x => /^(instagram|tiktok|youtube)$/i.test(x));
+    const nums = rest.filter(x => /^[\d,]+$/.test(x)).map(num);
+    const urlv = rest.find(x => /^https?:\/\//.test(x));
+    return {
+      round, handle,
+      followers: nums[0] ?? null,
+      platform: plat ? plat[0].toUpperCase() + plat.slice(1).replace(/tok/i,'Tok') : 'Instagram',
+      status: st ? (KO_STATUS[st] || st) : 'confirmed',
+      visit: dates[0] || null, post: dates[1] || null,
+      views: nums[1] ?? null, url: urlv || null, order: i + 1
+    };
+  });
+}
+
+function bindEditor(){
+  $('#c-edit').querySelectorAll('input[data-p]').forEach(el => {
+    el.addEventListener('input', e => {
+      const path = e.target.dataset.p.split('.');
+      let o = cur;
+      for (let i = 0; i < path.length - 1; i++) { if (!o[path[i]]) o[path[i]] = {}; o = o[path[i]]; }
+      o[path.at(-1)] = e.target.value;
+      mark();
+    });
+  });
+  $('#c-edit').querySelectorAll('[data-kpi],[data-col],[data-sec]').forEach(el => {
+    el.addEventListener('change', e => {
+      const t = e.target;
+      if (t.dataset.kpi){ cur.config.kpis = cur.config.kpis || {}; cur.config.kpis[t.dataset.kpi] = t.checked; }
+      if (t.dataset.col){ cur.config.cols = cur.config.cols || {}; cur.config.cols[t.dataset.col] = t.checked; }
+      if (t.dataset.sec){ cur.config[t.dataset.sec] = t.checked; }
+      mark();
+    });
+  });
+
+  $('#c-add')?.addEventListener('click', () => {
+    const rows = parsePaste($('#c-paste').value);
+    if (!rows.length) return toast('붙여넣은 내용이 없습니다.');
+    rows.forEach(r => { r.order = curCreators.length + 1; curCreators.push(r); });
+    $('#c-paste').value = ''; renderRows(); mark(); toast(rows.length + '명 추가했습니다.');
+  });
+  $('#c-replace')?.addEventListener('click', () => {
+    const rows = parsePaste($('#c-paste').value);
+    if (!rows.length) return toast('붙여넣은 내용이 없습니다.');
+    curCreators = rows; $('#c-paste').value = ''; renderRows(); mark();
+    toast(rows.length + '명으로 교체했습니다.');
+  });
+  $('#c-row')?.addEventListener('click', () => {
+    curCreators.push({ round:1, handle:'', followers:null, platform:'Instagram',
+      status:'confirmed', visit:null, post:null, views:null, url:null, order: curCreators.length + 1 });
+    renderRows(); mark();
+  });
+
+  $('#c-genpw')?.addEventListener('click', () => {
+    const cs = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const a = crypto.getRandomValues(new Uint32Array(12));
+    $('#c-pw').value = [...a].map(n => cs[n % cs.length]).join('');
+  });
+  $('#c-mkacct')?.addEventListener('click', createAccount);
+  $('#c-reset')?.addEventListener('click', async () => {
+    try { await A.sendPasswordResetEmail(auth, cur.ownerEmail); toast('재설정 메일을 보냈습니다.'); }
+    catch (e) { toast('실패: ' + (e.code || e.message)); }
+  });
+  $('#c-save').addEventListener('click', saveClient);
+  $('#c-del')?.addEventListener('click', deleteClient);
+}
+
+/* ── 계정 생성: 보조 앱 인스턴스로 만들어 현재 로그인을 유지합니다 ── */
+async function createAccount(){
+  const email = $('#c-email').value.trim(), pw = $('#c-pw').value;
+  if (!email) return toast('이메일을 입력해주세요.');
+  if (pw.length < 10) return toast('비밀번호는 10자 이상으로 해주세요.');
+  const btn = $('#c-mkacct'); btn.disabled = true;
+  try {
+    const { initializeApp, deleteApp } = await import(SDK + 'firebase-app.js');
+    const tmp = initializeApp(FIREBASE_CONFIG, 'mk-' + Date.now());
+    const tmpAuth = A.getAuth(tmp);
+    const cred = await A.createUserWithEmailAndPassword(tmpAuth, email, pw);
+    cur.ownerUid = cred.user.uid;
+    cur.ownerEmail = email;
+    newPw = pw;
+    await A.signOut(tmpAuth);
+    await deleteApp(tmp);
+    renderEditor();
+    toast('계정을 만들었습니다. 저장을 눌러 연결하세요.');
+  } catch (err) {
+    const map = {
+      'auth/email-already-in-use':'이미 사용 중인 이메일입니다.',
+      'auth/invalid-email':'이메일 형식을 확인해주세요.',
+      'auth/weak-password':'비밀번호가 너무 짧습니다.',
+      'auth/operation-not-allowed':'콘솔에서 이메일/비밀번호 로그인을 켜주세요.'
+    };
+    toast(map[err.code] || ('실패: ' + err.code));
+    btn.disabled = false;
+  }
+}
+
+async function saveClient(){
+  if (!cur.name.trim()) return toast('업체명을 입력해주세요.');
+  const btn = $('#c-save'); btn.disabled = true; $('#c-state').textContent = '저장 중…';
+  try {
+    const payload = {
+      name: cur.name.trim(),
+      ownerUid: cur.ownerUid || null,
+      ownerEmail: cur.ownerEmail || '',
+      package: {
+        name: (cur.package.name || '').trim(),
+        rounds: Number(cur.package.rounds) || null,
+        creatorCount: Number(cur.package.creatorCount) || null,
+        note: (cur.package.note || '').trim()
+      },
+      meta: cur.meta,
+      config: cur.config,
+      updatedAt: F.serverTimestamp()
+    };
+    if (!curId) {
+      payload.createdAt = F.serverTimestamp();
+      curId = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+    }
+    await F.setDoc(F.doc(db, 'clients', curId), payload, { merge: true });
+
+    // 크리에이터 전체 재기록
+    const old = await F.getDocs(F.collection(db, 'clients', curId, 'creators'));
+    const batch = F.writeBatch(db);
+    old.docs.forEach(d => batch.delete(d.ref));
+    curCreators.forEach((r, i) => {
+      const id = 'r' + String(i + 1).padStart(4, '0');
+      batch.set(F.doc(db, 'clients', curId, 'creators', id), {
+        round: Number(r.round) || 1,
+        handle: r.handle || '',
+        followers: r.followers ?? null,
+        platform: r.platform || 'Instagram',
+        status: r.status || 'confirmed',
+        visit: r.visit || null,
+        post: r.post || null,
+        views: r.views ?? null,
+        url: r.url || null,
+        order: i + 1
+      });
+    });
+    await batch.commit();
+
+    $('#c-state').textContent = '저장됨';
+    toast('저장했습니다.');
+    await loadClients();
+    $('#c-list').querySelectorAll('.citem').forEach(b =>
+      b.setAttribute('aria-current', String(b.dataset.id === curId)));
+  } catch (err) {
+    console.error(err);
+    $('#c-state').textContent = '';
+    toast('저장 실패: ' + (err.code || err.message));
+  } finally { btn.disabled = false; }
+}
+
+async function deleteClient(){
+  if (!confirm(`"${cur.name}" 클라이언트와 크리에이터 데이터를 모두 삭제합니다.\n로그인 계정은 Firebase 콘솔에서 따로 지워야 합니다.`)) return;
+  try {
+    const old = await F.getDocs(F.collection(db, 'clients', curId, 'creators'));
+    const batch = F.writeBatch(db);
+    old.docs.forEach(d => batch.delete(d.ref));
+    batch.delete(F.doc(db, 'clients', curId));
+    await batch.commit();
+    curId = null; cur = null; curCreators = [];
+    $('#c-edit').innerHTML = '<div class="blank">왼쪽에서 클라이언트를 선택하거나 새로 추가하세요.</div>';
+    await loadClients();
+    toast('삭제했습니다.');
+  } catch (err) { toast('삭제 실패: ' + (err.code || err.message)); }
+}
+
 </script>
 </body>
 </html>
