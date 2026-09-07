@@ -1,0 +1,15 @@
+# Firebase 실제 키 — 절대 커밋하지 않습니다
+firebase-config.js
+
+# 서비스 계정 키 (있다면)
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+.env
+.env.*
+
+# OS · 편집기
+Thumbs.db
+desktop.ini
+.DS_Store
+*.swp
+새 텍스트 문서.txt

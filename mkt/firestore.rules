@@ -1,0 +1,72 @@
+rules_version = '2';
+
+/* ══════════════════════════════════════════════════════════════
+   Eight Labs — 문의 게시판 보안 규칙
+
+   설계 의도
+   ─────────────────────────────────────────────────────────────
+   board/{postId}                 공개 행. 접수 여부와 날짜만 들어갑니다.
+                                  누구나 읽을 수 있지만 내용이 없습니다.
+   board/{postId}/private/detail  실제 문의 내용. 로그인하지 않으면
+                                  아무도 읽을 수 없습니다. 쓰기만 가능합니다.
+
+   Firestore 는 필드 단위 읽기 제어가 없습니다. 그래서 "목록에 보일 것"과
+   "숨겨야 할 것"을 아예 다른 문서로 나눴습니다. 이게 자동 비공개의 실체입니다.
+   하위 컬렉션은 상위 문서의 규칙을 물려받지 않으므로 위 구조가 유효합니다.
+
+   적용: Firebase 콘솔 → Firestore Database → 규칙 → 붙여넣기 → 게시
+   ══════════════════════════════════════════════════════════════ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function str(v, max) {
+      return v is string && v.size() > 0 && v.size() <= max;
+    }
+    function optStr(v, max) {
+      return !(v is string) || v.size() <= max;
+    }
+    function isAdmin() {
+      return request.auth != null;
+    }
+
+    match /board/{postId} {
+
+      // 목록 행 — 내용이 없으므로 공개해도 안전합니다.
+      allow read: if true;
+
+      allow create: if request.resource.data.keys().hasOnly(['createdAt', 'status', 'secret'])
+                    && request.resource.data.status == 'received'
+                    && request.resource.data.secret == true
+                    && request.resource.data.createdAt == request.time;
+
+      // 상태를 '답변 완료'로 바꾸거나 삭제하는 건 관리자만.
+      allow update, delete: if isAdmin();
+
+      // ── 실제 문의 내용 ──────────────────────────────
+      match /private/{docId} {
+
+        // 공개 읽기 차단. 콘솔 또는 로그인한 관리자만 열람합니다.
+        allow read: if isAdmin();
+
+        allow create: if str(request.resource.data.company, 100)
+                      && str(request.resource.data.name, 50)
+                      && str(request.resource.data.email, 120)
+                      && str(request.resource.data.message, 4000)
+                      && optStr(request.resource.data.phone, 40)
+                      && request.resource.data.agree == true
+                      && request.resource.data.createdAt == request.time
+                      && request.resource.data.keys().hasOnly(
+                           ['company', 'name', 'email', 'phone', 'message', 'agree', 'createdAt']);
+
+        // 작성 후에는 본인도 고칠 수 없습니다.
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // 그 외 모든 경로 차단
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
