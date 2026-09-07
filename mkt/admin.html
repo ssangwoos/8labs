@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Eight Labs — 문의 관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+:root{
+  --red:#C0202E; --red-lift:#E4404E; --gold:#F0C31E;
+  --bg:#12100F; --panel:#191514; --panel-2:#211C1B;
+  --tx:#F4F1EF; --dim:#A79E9A; --faint:#736A66;
+  --rule:#2E2725; --rule-2:#3A3230;
+  --ok:#4FB477;
+  --f:'Noto Sans KR','Apple SD Gothic Neo',system-ui,sans-serif;
+  --m:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--f);
+  font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;word-break:keep-all}
+h1,h2,h3,p,ul{margin:0;padding:0}
+ul{list-style:none}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* ── 공통 ── */
+.mono{font-family:var(--m);font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-family:var(--m);font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+  padding:10px 16px;border:1px solid transparent;background:var(--red);color:#fff;
+  cursor:pointer;transition:.15s;text-decoration:none}
+.btn:hover{filter:brightness(1.12)}
+.btn:disabled{opacity:.45;cursor:default;filter:none}
+.btn--ghost{background:transparent;border-color:var(--rule-2);color:var(--tx)}
+.btn--ghost:hover{border-color:var(--tx);filter:none}
+.btn--danger{background:transparent;border-color:var(--rule-2);color:var(--faint)}
+.btn--danger:hover{border-color:var(--red-lift);color:var(--red-lift);filter:none}
+.pill{font-family:var(--m);font-size:10px;letter-spacing:.1em;padding:3px 8px;
+  border:1px solid var(--rule-2);color:var(--dim);white-space:nowrap}
+.pill.done{border-color:var(--ok);color:var(--ok)}
+
+/* ── 로그인 ── */
+#login{min-height:100dvh;display:grid;place-items:center;padding:24px}
+.card{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--rule);
+  padding:32px 28px;display:flex;flex-direction:column;gap:18px}
+.card .eyebrow{font-family:var(--m);font-size:10.5px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--faint)}
+.card h1{font-size:22px;font-weight:900;letter-spacing:-.02em;line-height:1.3}
+.fld{display:flex;flex-direction:column;gap:7px}
+.fld label{font-family:var(--m);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--faint)}
+.fld input{font-family:var(--f);font-size:15px;color:var(--tx);background:transparent;
+  border:1px solid var(--rule-2);padding:11px 13px;width:100%;transition:border-color .15s}
+.fld input:focus{outline:none;border-color:var(--gold)}
+.msg{font-size:13px;line-height:1.6;color:var(--dim);min-height:1.6em}
+.msg.err{color:var(--red-lift)}
+
+/* ── 헤더 ── */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;
+  padding:0 20px;height:58px;background:var(--bg);border-bottom:1px solid var(--rule)}
+.top .brand{font-family:var(--m);font-size:12px;letter-spacing:.18em;text-transform:uppercase}
+.top .brand b{color:var(--red-lift);font-weight:600}
+.top .who{margin-left:auto;font-family:var(--m);font-size:11.5px;color:var(--faint);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40vw}
+.top .btn{padding:7px 12px;font-size:11px}
+
+/* ── 필터 ── */
+.bar{display:flex;align-items:center;gap:8px;padding:14px 20px;
+  border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.chip{font-family:var(--m);font-size:11.5px;letter-spacing:.06em;padding:6px 12px;
+  border:1px solid var(--rule-2);background:transparent;color:var(--dim);cursor:pointer;
+  transition:.15s}
+.chip:hover{color:var(--tx)}
+.chip[aria-pressed="true"]{background:var(--tx);border-color:var(--tx);color:var(--bg)}
+.bar .count{margin-left:auto;font-family:var(--m);font-size:11.5px;color:var(--faint)}
+
+/* ── 본문 2단 ── */
+.wrap{display:grid;grid-template-columns:minmax(300px,380px) 1fr;
+  height:calc(100dvh - 58px - 53px)}
+.list{border-right:1px solid var(--rule);overflow-y:auto}
+.detail{overflow-y:auto;padding:32px clamp(20px,4vw,44px)}
+@media (max-width:860px){
+  .wrap{grid-template-columns:1fr;height:auto}
+  .list{border-right:0;border-bottom:1px solid var(--rule);max-height:44dvh}
+  .detail{padding:24px 20px}
+}
+
+/* ── 리스트 ── */
+.item{display:block;width:100%;text-align:left;background:transparent;border:0;
+  border-bottom:1px solid var(--rule);padding:14px 20px;cursor:pointer;
+  border-left:2px solid transparent;transition:background .15s}
+.item:hover{background:var(--panel)}
+.item[aria-current="true"]{background:var(--panel-2);border-left-color:var(--red-lift)}
+.item .r1{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.item .co{font-weight:700;font-size:14.5px;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .r2{display:flex;align-items:center;gap:10px;
+  font-family:var(--m);font-size:11px;color:var(--faint)}
+.item .pv{font-size:13px;color:var(--dim);margin-top:6px;line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.empty{padding:40px 20px;color:var(--faint);font-size:13.5px;line-height:1.8}
+
+/* ── 상세 ── */
+.dhead{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;
+  padding-bottom:20px;border-bottom:1px solid var(--rule)}
+.dhead h2{font-size:clamp(21px,3vw,28px);font-weight:900;letter-spacing:-.025em;line-height:1.3}
+.dhead .sp{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:0;margin:0 0 28px}
+.meta .m{padding:16px 0;border-bottom:1px solid var(--rule)}
+.meta .mk{font-family:var(--m);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--faint)}
+.meta .mv{margin-top:6px;font-size:15px;font-weight:500;word-break:break-all}
+.meta a.mv{color:var(--tx);text-decoration:none;border-bottom:1px solid var(--rule-2)}
+.meta a.mv:hover{color:var(--gold);border-bottom-color:var(--gold)}
+.body{background:var(--panel);border:1px solid var(--rule);border-top:2px solid var(--red);
+  padding:24px;white-space:pre-wrap;font-size:15px;line-height:1.85}
+.dact{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;
+  padding-top:22px;border-top:1px solid var(--rule)}
+.dact .sp{margin-left:auto}
+.blank{display:grid;place-items:center;height:100%;min-height:200px;
+  color:var(--faint);font-size:13.5px;text-align:center;line-height:1.9}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:60;
+  background:var(--panel-2);border:1px solid var(--rule-2);padding:11px 18px;
+  font-size:13.5px;box-shadow:0 8px 28px rgba(0,0,0,.5)}
+</style>
+</head>
+<body>
+
+<!-- ══════════ 로그인 ══════════ -->
+<section id="login">
+  <form class="card" id="login-form">
+    <div class="eyebrow">Eight Labs</div>
+    <h1>문의 관리</h1>
+    <div class="fld">
+      <label for="l-email">이메일</label>
+      <input id="l-email" type="email" autocomplete="username" required>
+    </div>
+    <div class="fld">
+      <label for="l-pw">비밀번호</label>
+      <input id="l-pw" type="password" autocomplete="current-password" required>
+    </div>
+    <button class="btn" type="submit" id="l-btn">로그인</button>
+    <p class="msg" id="l-msg" role="status" aria-live="polite">불러오는 중…</p>
+  </form>
+</section>
+
+<!-- ══════════ 관리 화면 ══════════ -->
+<div id="app" hidden>
+  <header class="top">
+    <span class="brand"><b>8LABS</b> · 문의 관리</span>
+    <span class="who" id="who"></span>
+    <button class="btn btn--ghost" id="reload">새로고침</button>
+    <button class="btn btn--ghost" id="logout">로그아웃</button>
+  </header>
+
+  <div class="bar">
+    <button class="chip" data-f="all" aria-pressed="true">전체</button>
+    <button class="chip" data-f="received" aria-pressed="false">접수됨</button>
+    <button class="chip" data-f="answered" aria-pressed="false">답변 완료</button>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="wrap">
+    <div class="list" id="list"></div>
+    <div class="detail" id="detail">
+      <div class="blank">왼쪽에서 문의를 선택하세요.</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+/* ══════════════════════════════════════════════════════════════
+   Eight Labs — 문의 관리
+   Firestore 규칙상 board/{id}/private/detail 은 로그인해야 읽힙니다.
+   ══════════════════════════════════════════════════════════════ */
+const SDK = 'https://www.gstatic.com/firebasejs/10.12.5/';
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyD1LHBaYbxaHfZTOQwZrYqDoNNcJkq-Z_8",
+  authDomain: "promptmarket-c3c3a.firebaseapp.com",
+  projectId: "promptmarket-c3c3a",
+  storageBucket: "promptmarket-c3c3a.firebasestorage.app",
+  messagingSenderId: "235384803267",
+  appId: "1:235384803267:web:ae44b6158c6ce31ebe3776"
+};
+
+const $ = s => document.querySelector(s);
+const loginEl = $('#login'), appEl = $('#app'), lMsg = $('#l-msg'), lBtn = $('#l-btn');
+const listEl = $('#list'), detailEl = $('#detail'), countEl = $('#count');
+
+let A = null, F = null, auth = null, db = null;
+let ROWS = [], filter = 'all', selected = null;
+
+const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+function when(ts){
+  const d = ts && ts.toDate ? ts.toDate() : null;
+  if (!d) return '—';
+  return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function toast(text){
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+function say(text, err){ lMsg.textContent = text; lMsg.className = 'msg' + (err ? ' err' : ''); }
+
+/* ───────── 부팅 ───────── */
+try {
+  const { initializeApp } = await import(SDK + 'firebase-app.js');
+  A = await import(SDK + 'firebase-auth.js');
+  F = await import(SDK + 'firebase-firestore.js');
+  const app = initializeApp(FIREBASE_CONFIG);
+  auth = A.getAuth(app);
+  db = F.getFirestore(app);
+  say('');
+  A.onAuthStateChanged(auth, user => {
+    if (user) {
+      loginEl.hidden = true; appEl.hidden = false;
+      $('#who').textContent = user.email || '';
+      load();
+    } else {
+      appEl.hidden = true; loginEl.hidden = false;
+      ROWS = []; selected = null;
+    }
+  });
+} catch (e) {
+  console.error(e);
+  say('Firebase 를 불러오지 못했습니다. 네트워크를 확인해주세요.', true);
+  lBtn.disabled = true;
+}
+
+/* ───────── 로그인 ───────── */
+$('#login-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = $('#l-email').value.trim(), pw = $('#l-pw').value;
+  if (!email || !pw) return say('이메일과 비밀번호를 입력해주세요.', true);
+  lBtn.disabled = true; say('로그인 중…');
+  try {
+    await A.signInWithEmailAndPassword(auth, email, pw);
+    $('#l-pw').value = ''; say('');
+  } catch (err) {
+    const map = {
+      'auth/invalid-credential': '이메일 또는 비밀번호가 맞지 않습니다.',
+      'auth/invalid-email': '이메일 형식을 확인해주세요.',
+      'auth/too-many-requests': '시도가 너무 많습니다. 잠시 후 다시 해주세요.',
+      'auth/operation-not-allowed': 'Firebase 콘솔에서 이메일/비밀번호 로그인을 켜주세요.',
+      'auth/network-request-failed': '네트워크 오류입니다.'
+    };
+    say(map[err.code] || ('로그인 실패: ' + err.code), true);
+  } finally {
+    lBtn.disabled = false;
+  }
+});
+$('#logout').addEventListener('click', () => A.signOut(auth));
+$('#reload').addEventListener('click', () => load());
+
+/* ───────── 목록 ───────── */
+async function load(){
+  listEl.innerHTML = '<div class="empty">불러오는 중…</div>';
+  try {
+    const q = F.query(F.collection(db, 'board'), F.orderBy('createdAt', 'desc'), F.limit(100));
+    const snap = await F.getDocs(q);
+    ROWS = await Promise.all(snap.docs.map(async d => {
+      let detail = {};
+      try {
+        const ds = await F.getDoc(F.doc(db, 'board', d.id, 'private', 'detail'));
+        if (ds.exists()) detail = ds.data();
+      } catch (e) { console.warn('detail', d.id, e.code); }
+      return { id: d.id, ...d.data(), detail };
+    }));
+    render();
+  } catch (err) {
+    console.error(err);
+    listEl.innerHTML = '<div class="empty">' +
+      (err.code === 'permission-denied'
+        ? '읽기 권한이 없습니다. Firestore 규칙을 확인해주세요.'
+        : '목록을 불러오지 못했습니다. (' + esc(err.code || err.message) + ')') + '</div>';
+  }
+}
+
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+  filter = c.dataset.f;
+  document.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', String(x === c)));
+  render();
+}));
+
+function visible(){
+  return filter === 'all' ? ROWS : ROWS.filter(r => (r.status || 'received') === filter);
+}
+
+function render(){
+  const rows = visible();
+  const n = ROWS.length, waiting = ROWS.filter(r => (r.status || 'received') !== 'answered').length;
+  countEl.textContent = `전체 ${n}건 · 미답변 ${waiting}건`;
+
+  if (!rows.length){
+    listEl.innerHTML = '<div class="empty">해당하는 문의가 없습니다.</div>';
+    if (!ROWS.length) detailEl.innerHTML = '<div class="blank">등록된 문의가 없습니다.</div>';
+    return;
+  }
+
+  listEl.innerHTML = rows.map(r => {
+    const done = r.status === 'answered';
+    const d = r.detail || {};
+    return `<button class="item" data-id="${esc(r.id)}" aria-current="${r.id === selected}">
+      <div class="r1">
+        <span class="co">${esc(d.company || '(회사명 없음)')}</span>
+        <span class="pill${done ? ' done' : ''}">${done ? '답변 완료' : '접수됨'}</span>
+      </div>
+      <div class="r2"><span>${esc(d.name || '—')}</span><span>·</span><span>${esc(when(r.createdAt))}</span></div>
+      <div class="pv">${esc((d.message || '').slice(0, 90))}</div>
+    </button>`;
+  }).join('');
+
+  listEl.querySelectorAll('.item').forEach(b =>
+    b.addEventListener('click', () => select(b.dataset.id)));
+
+  if (selected && rows.some(r => r.id === selected)) showDetail(selected);
+  else if (!selected) detailEl.innerHTML = '<div class="blank">왼쪽에서 문의를 선택하세요.</div>';
+}
+
+function select(id){
+  selected = id;
+  listEl.querySelectorAll('.item').forEach(b =>
+    b.setAttribute('aria-current', String(b.dataset.id === id)));
+  showDetail(id);
+}
+
+function showDetail(id){
+  const r = ROWS.find(x => x.id === id);
+  if (!r) return;
+  const d = r.detail || {};
+  const done = r.status === 'answered';
+  const subject = encodeURIComponent(`[에이트랩스] 문의 회신 — ${d.company || ''}`);
+  const greeting = encodeURIComponent(`${d.name || ''}님, 안녕하세요.\n에이트랩스입니다. 남겨주신 문의 관련해 회신드립니다.\n\n`);
+
+  detailEl.innerHTML = `
+    <div class="dhead">
+      <div>
+        <h2>${esc(d.company || '(회사명 없음)')}</h2>
+        <p class="mono" style="color:var(--faint);font-size:11.5px;letter-spacing:.1em;margin-top:6px">
+          접수번호 ${esc(r.id.slice(0,6).toUpperCase())}
+        </p>
+      </div>
+      <div class="sp"><span class="pill${done ? ' done' : ''}">${done ? '답변 완료' : '접수됨'}</span></div>
+    </div>
+
+    <div class="meta">
+      <div class="m"><div class="mk">담당자</div><div class="mv">${esc(d.name || '—')}</div></div>
+      <div class="m"><div class="mk">이메일</div>${
+        d.email ? `<a class="mv" href="mailto:${esc(d.email)}?subject=${subject}&body=${greeting}">${esc(d.email)}</a>`
+                : '<div class="mv">—</div>'}</div>
+      <div class="m"><div class="mk">연락처</div>${
+        d.phone ? `<a class="mv" href="tel:${esc(String(d.phone).replace(/[^0-9+]/g,''))}">${esc(d.phone)}</a>`
+                : '<div class="mv">—</div>'}</div>
+      <div class="m"><div class="mk">접수일시</div><div class="mv mono">${esc(when(r.createdAt))}</div></div>
+    </div>
+
+    <div class="body">${esc(d.message || '(내용 없음)')}</div>
+
+    <div class="dact">
+      ${d.email ? `<a class="btn" href="mailto:${esc(d.email)}?subject=${subject}&body=${greeting}">메일로 회신 →</a>` : ''}
+      <button class="btn btn--ghost" id="a-toggle">${done ? '접수됨으로 되돌리기' : '답변 완료로 표시'}</button>
+      <button class="btn btn--danger sp" id="a-del">삭제</button>
+    </div>`;
+
+  $('#a-toggle').addEventListener('click', () => setStatus(r.id, done ? 'received' : 'answered'));
+  $('#a-del').addEventListener('click', () => remove(r.id, d.company || ''));
+}
+
+/* ───────── 변경 ───────── */
+async function setStatus(id, status){
+  try {
+    await F.updateDoc(F.doc(db, 'board', id), { status });
+    const r = ROWS.find(x => x.id === id);
+    if (r) r.status = status;
+    render();
+    toast(status === 'answered' ? '답변 완료로 표시했습니다.' : '접수됨으로 되돌렸습니다.');
+  } catch (err) {
+    console.error(err);
+    toast('변경에 실패했습니다. (' + (err.code || err.message) + ')');
+  }
+}
+
+async function remove(id, label){
+  if (!confirm(`"${label}" 문의를 삭제합니다.\n내용과 연락처가 함께 지워지고 되돌릴 수 없습니다.`)) return;
+  try {
+    await F.deleteDoc(F.doc(db, 'board', id, 'private', 'detail'));
+    await F.deleteDoc(F.doc(db, 'board', id));
+    ROWS = ROWS.filter(x => x.id !== id);
+    selected = null;
+    detailEl.innerHTML = '<div class="blank">왼쪽에서 문의를 선택하세요.</div>';
+    render();
+    toast('삭제했습니다.');
+  } catch (err) {
+    console.error(err);
+    toast('삭제에 실패했습니다. (' + (err.code || err.message) + ')');
+  }
+}
+</script>
+</body>
+</html>
