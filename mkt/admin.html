@@ -197,6 +197,12 @@ textarea.paste:focus{outline:none;border-color:var(--gold)}
 .acct .st b{color:var(--ok)}
 .pwout{font-family:var(--m);font-size:13px;background:var(--panel-2);border:1px solid var(--gold);
   padding:10px 13px;color:var(--gold);word-break:break-all;margin-top:12px}
+.handoff{margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-left:2px solid var(--gold);padding:16px 18px}
+.handoff .hk{font-family:var(--m);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+.handoff pre{font-family:var(--m);font-size:12.5px;line-height:1.85;color:var(--tx);
+  margin:0 0 12px;white-space:pre-wrap;word-break:break-all}
 .uidbox{font-family:var(--m);font-size:12.5px;background:var(--panel-2);
   border:1px solid var(--gold);color:var(--gold);padding:10px 12px;margin:14px 0 10px;
   word-break:break-all;user-select:all}
@@ -626,6 +632,19 @@ async function openClient(id){
   renderEditor();
 }
 
+function dashUrl(){
+  return location.origin + location.pathname.replace(/[^/]*$/, 'dashboard.html');
+}
+function handoffText(){
+  return [
+    '에이트랩스 캠페인 대시보드',
+    dashUrl(),
+    '',
+    '아이디  ' + (cur.ownerEmail || ''),
+    '비밀번호  ' + (newPw || '(별도 전달)')
+  ].join('\n');
+}
+
 const val = (o,p,d='') => p.split('.').reduce((a,k)=> (a && a[k] !== undefined && a[k] !== null) ? a[k] : undefined, o) ?? d;
 const F1 = (lb, path, ph='') =>
   `<div class="fld"><label>${lb}</label><input data-p="${path}" value="${esc(val(cur,path))}" placeholder="${esc(ph)}"></div>`;
@@ -678,8 +697,12 @@ function renderEditor(){
             <button class="btn" id="c-setpw" style="flex:1">변경</button>
           </div></div>
       </div>
-      <p class="hint">변경하면 즉시 적용됩니다. 저장을 누르지 않아도 됩니다.
-        업체에 새 비밀번호를 전달해 주세요.</p>` : ''}
+      <p class="hint">변경하면 즉시 적용됩니다. 저장을 누르지 않아도 됩니다.</p>
+      <div class="handoff">
+        <div class="hk">업체에 전달할 내용</div>
+        <pre id="c-handoff">${esc(handoffText())}</pre>
+        <button class="btn btn--ghost" id="c-copyho">복사</button>
+      </div>` : ''}
       ${linked ? '' : `
       <div class="grid2" style="margin-top:14px">
         <div class="fld"><label>로그인 이메일</label>
@@ -851,6 +874,11 @@ function bindEditor(){
     const a = crypto.getRandomValues(new Uint32Array(12));
     return [...a].map(n => cs[n % cs.length]).join('');
   };
+  $('#c-copyho')?.addEventListener('click', () => {
+    navigator.clipboard.writeText(handoffText()).then(
+      () => toast('복사했습니다. 업체에 전달하세요.'),
+      () => toast('복사 실패 — 위 내용을 직접 선택해 복사하세요.'));
+  });
   $('#c-genpw2')?.addEventListener('click', () => { $('#c-newpw').value = genPw(); });
   $('#c-setpw')?.addEventListener('click', async () => {
     const pw = $('#c-newpw').value.trim();
