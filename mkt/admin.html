@@ -196,6 +196,11 @@ textarea.paste:focus{outline:none;border-color:var(--gold)}
 .acct .st b{color:var(--ok)}
 .pwout{font-family:var(--m);font-size:13px;background:var(--panel-2);border:1px solid var(--gold);
   padding:10px 13px;color:var(--gold);word-break:break-all;margin-top:12px}
+.uidbox{font-family:var(--m);font-size:12.5px;background:var(--panel-2);
+  border:1px solid var(--gold);color:var(--gold);padding:10px 12px;margin:14px 0 10px;
+  word-break:break-all;user-select:all}
+.diag{color:var(--dim);font-size:13px;line-height:1.8}
+.diag b{color:var(--red-lift)}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:60;
   background:var(--panel-2);border:1px solid var(--rule-2);padding:11px 18px;
   font-size:13.5px;box-shadow:0 8px 28px rgba(0,0,0,.5)}
@@ -283,7 +288,7 @@ const $ = s => document.querySelector(s);
 const loginEl = $('#login'), appEl = $('#app'), lMsg = $('#l-msg'), lBtn = $('#l-btn');
 const listEl = $('#list'), detailEl = $('#detail'), countEl = $('#count');
 
-let A = null, F = null, auth = null, db = null;
+let A = null, F = null, auth = null, db = null, APP = null, FN = null, fns = null;
 let ROWS = [], filter = 'all', selected = null;
 
 const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -306,9 +311,9 @@ try {
   const { initializeApp } = await import(SDK + 'firebase-app.js');
   A = await import(SDK + 'firebase-auth.js');
   F = await import(SDK + 'firebase-firestore.js');
-  const app = initializeApp(FIREBASE_CONFIG);
-  auth = A.getAuth(app);
-  db = F.getFirestore(app);
+  APP = initializeApp(FIREBASE_CONFIG);
+  auth = A.getAuth(APP);
+  db = F.getFirestore(APP);
   say('');
   A.onAuthStateChanged(auth, user => {
     if (user) {
@@ -530,11 +535,52 @@ async function loadClients(){
       .sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ko'));
     renderClients();
   } catch (err) {
-    $('#c-list').innerHTML = '<div class="empty">' +
-      (err.code === 'permission-denied' ? '권한이 없습니다. 규칙의 staff 등록을 확인해주세요.'
-                                        : '불러오지 못했습니다. (' + esc(err.code) + ')') + '</div>';
+    if (err.code === 'permission-denied') {
+      const d = await diagnose();
+      $('#c-list').innerHTML =
+        `<div class="empty"><div class="diag">${d.msg}</div>` +
+        `<div class="uidbox" id="c-uid">${esc(d.email)}</div>
+         <button class="btn btn--ghost" id="c-copyuid">이메일 복사</button>` +
+        '</div>';
+      $('#c-copyuid')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(d.email).then(() => toast('UID를 복사했습니다.'),
+          () => toast('복사 실패 — 위 값을 직접 선택해 복사하세요.'));
+      });
+    } else {
+      $('#c-list').innerHTML = '<div class="empty">불러오지 못했습니다. (' + esc(err.code || err.message) + ')</div>';
+    }
   }
 }
+
+/* Cloud Function 호출 (서울 리전) */
+async function callFn(name, data){
+  if (!FN) {
+    FN = await import(SDK + 'firebase-functions.js');
+    fns = FN.getFunctions(APP, 'asia-northeast3');
+  }
+  const res = await FN.httpsCallable(fns, name)(data);
+  return res.data;
+}
+function fnErr(err){
+  if (err.code === 'functions/not-found' || err.code === 'not-found')
+    return '함수가 아직 배포되지 않았습니다. functions 폴더에서 배포해 주세요.';
+  if (err.code === 'functions/permission-denied')
+    return err.message || '관리자만 사용할 수 있습니다.';
+  if (err.code === 'functions/invalid-argument' || err.code === 'functions/failed-precondition')
+    return err.message;
+  if (err.code === 'functions/unauthenticated') return '다시 로그인해 주세요.';
+  return '실패: ' + (err.message || err.code);
+}
+
+/* 권한 오류 안내 — 규칙의 isStaff() 이메일 목록과 맞는지 확인합니다. */
+async function diagnose(){
+  const u = auth.currentUser || {};
+  return { uid: u.uid || '', email: u.email || '', showUid: true, msg:
+    '<b>관리자 권한이 없습니다.</b><br>' +
+    'Firestore → 규칙 탭의 <code>isStaff()</code> 안에<br>' +
+    '아래 이메일이 그대로 들어 있는지 확인하고<br><b>게시</b>를 눌렀는지 확인해 주세요.' };
+}
+
 
 function renderClients(){
   $('#c-list').innerHTML = CLIENTS.length ? CLIENTS.map(c => `
@@ -617,9 +663,22 @@ function renderEditor(){
           ? `<b>연결됨</b> · ${esc(cur.ownerEmail || '')}`
           : '아직 계정이 없습니다. 이메일을 넣고 계정을 만들어주세요.'}</span>
         ${linked
-          ? '<button class="btn btn--ghost" id="c-reset">비밀번호 재설정 메일</button>'
+          ? '<button class="btn btn--ghost" id="c-reset">재설정 메일</button>' +
+            '<button class="btn btn--danger" id="c-unlink">연결 해제</button>'
           : ''}
       </div>
+      ${linked ? `
+      <div class="grid2" style="margin-top:14px">
+        <div class="fld"><label>새 비밀번호</label>
+          <input id="c-newpw" type="text" placeholder="10자 이상"></div>
+        <div class="fld"><label>&nbsp;</label>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn--ghost" id="c-genpw2" style="flex:1">자동 생성</button>
+            <button class="btn" id="c-setpw" style="flex:1">변경</button>
+          </div></div>
+      </div>
+      <p class="hint">변경하면 즉시 적용됩니다. 저장을 누르지 않아도 됩니다.
+        업체에 새 비밀번호를 전달해 주세요.</p>` : ''}
       ${linked ? '' : `
       <div class="grid2" style="margin-top:14px">
         <div class="fld"><label>로그인 이메일</label>
@@ -631,7 +690,7 @@ function renderEditor(){
         <button class="btn btn--ghost" id="c-genpw">비밀번호 자동 생성</button>
         <button class="btn" id="c-mkacct">계정 만들기</button>
       </div>`}
-      ${newPw ? `<div class="pwout">발급 완료 · 이 비밀번호는 다시 볼 수 없습니다. 지금 복사해 전달하세요.<br><br>${esc(cur.ownerEmail)}<br>${esc(newPw)}</div>` : ''}
+      ${newPw ? `<div class="pwout">이 비밀번호는 이 화면을 벗어나면 다시 볼 수 없습니다. 지금 복사해 전달하세요.<br><br>${esc(cur.ownerEmail)}<br>${esc(newPw)}</div>` : ''}
     </div>
 
     <div class="sec">
@@ -786,12 +845,31 @@ function bindEditor(){
     renderRows(); mark();
   });
 
-  $('#c-genpw')?.addEventListener('click', () => {
+  const genPw = () => {
     const cs = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     const a = crypto.getRandomValues(new Uint32Array(12));
-    $('#c-pw').value = [...a].map(n => cs[n % cs.length]).join('');
+    return [...a].map(n => cs[n % cs.length]).join('');
+  };
+  $('#c-genpw2')?.addEventListener('click', () => { $('#c-newpw').value = genPw(); });
+  $('#c-setpw')?.addEventListener('click', async () => {
+    const pw = $('#c-newpw').value.trim();
+    if (pw.length < 10) return toast('비밀번호는 10자 이상으로 해주세요.');
+    const btn = $('#c-setpw'); btn.disabled = true;
+    try {
+      await callFn('setClientPassword', { uid: cur.ownerUid, password: pw });
+      newPw = pw; renderEditor();
+      toast('비밀번호를 변경했습니다.');
+    } catch (err) { console.error(err); toast(fnErr(err)); btn.disabled = false; }
   });
+
+  $('#c-genpw')?.addEventListener('click', () => { $('#c-pw').value = genPw(); });
   $('#c-mkacct')?.addEventListener('click', createAccount);
+  $('#c-unlink')?.addEventListener('click', () => {
+    if (!confirm('이 클라이언트에서 계정 연결만 해제합니다.\n로그인 계정 자체는 남아 있으며, Firebase 콘솔에서 따로 지워야 합니다.\n해제 후 저장을 눌러야 반영됩니다.')) return;
+    cur.ownerUid = null; newPw = '';
+    renderEditor(); mark();
+    toast('연결을 해제했습니다. 저장을 눌러주세요.');
+  });
   $('#c-reset')?.addEventListener('click', async () => {
     try { await A.sendPasswordResetEmail(auth, cur.ownerEmail); toast('재설정 메일을 보냈습니다.'); }
     catch (e) { toast('실패: ' + (e.code || e.message)); }
@@ -883,13 +961,27 @@ async function saveClient(){
   } catch (err) {
     console.error(err);
     $('#c-state').textContent = '';
-    toast('저장 실패: ' + (err.code || err.message));
+    if (err.code === 'permission-denied') {
+      const d = await diagnose();
+      toast('저장 실패 — 권한 없음. 클라이언트 목록 영역의 안내를 확인해주세요.');
+      $('#c-list').innerHTML =
+        `<div class="empty"><div class="diag">${d.msg}</div>` +
+        `<div class="uidbox">${esc(d.email)}</div></div>`;
+    } else {
+      toast('저장 실패: ' + (err.code || err.message));
+    }
   } finally { btn.disabled = false; }
 }
 
 async function deleteClient(){
-  if (!confirm(`"${cur.name}" 클라이언트와 크리에이터 데이터를 모두 삭제합니다.\n로그인 계정은 Firebase 콘솔에서 따로 지워야 합니다.`)) return;
+  if (!confirm(`"${cur.name}" 클라이언트와 크리에이터 데이터를 모두 삭제합니다.`)) return;
+  const alsoAccount = cur.ownerUid &&
+    confirm('로그인 계정도 함께 삭제할까요?\n\n확인 = 계정까지 삭제\n취소 = 데이터만 삭제하고 계정은 남김');
   try {
+    if (alsoAccount) {
+      try { await callFn('deleteClientAccount', { uid: cur.ownerUid }); }
+      catch (e) { toast('계정 삭제 실패 — ' + fnErr(e) + ' 데이터만 삭제합니다.'); }
+    }
     const old = await F.getDocs(F.collection(db, 'clients', curId, 'creators'));
     const batch = F.writeBatch(db);
     old.docs.forEach(d => batch.delete(d.ref));
