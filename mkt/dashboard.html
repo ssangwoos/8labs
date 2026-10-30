@@ -12,8 +12,8 @@
   --ink:#15100F; --ink-2:#4B4241; --ink-3:#807472; --ink-4:#A99E9C;
   --line:#E4DDDB; --line-2:#F0EAE9;
   --brand:#C0202E;
-  --s1:#E9B9BD; --s2:#C25A67; --s3:#8E141F;
-  --on1:#7A1019; --on2:#FFFFFF; --on3:#FFFFFF;
+  --s0:#E2DCD9; --s1:#E9B9BD; --s2:#C25A67; --s3:#8E141F;
+  --on0:#6E635F; --on1:#7A1019; --on2:#FFFFFF; --on3:#FFFFFF;
   --warn:#8A6100; --warn-bg:#FBF0D8;
   --good:#17703F;
   --shadow:0 1px 2px rgba(21,16,15,.05), 0 10px 30px -22px rgba(21,16,15,.4);
@@ -24,8 +24,8 @@
   --ink:#F3EDEB; --ink-2:#C6BAB7; --ink-3:#8F8280; --ink-4:#6B605E;
   --line:#332B2A; --line-2:#262020;
   --brand:#F0757C;
-  --s1:#6E2A32; --s2:#C4535F; --s3:#F6B3B9;
-  --on1:#F0A5AC; --on2:#FFFFFF; --on3:#3A1215;
+  --s0:#3A3233; --s1:#6E2A32; --s2:#C4535F; --s3:#F6B3B9;
+  --on0:#A79A97; --on1:#F0A5AC; --on2:#FFFFFF; --on3:#3A1215;
   --warn:#E4B45C; --warn-bg:#332916;
   --good:#63C48D;
   --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 30px -22px rgba(0,0,0,.9);
@@ -36,8 +36,8 @@
   --ink:#F3EDEB; --ink-2:#C6BAB7; --ink-3:#8F8280; --ink-4:#6B605E;
   --line:#332B2A; --line-2:#262020;
   --brand:#F0757C;
-  --s1:#6E2A32; --s2:#C4535F; --s3:#F6B3B9;
-  --on1:#F0A5AC; --on2:#FFFFFF; --on3:#3A1215;
+  --s0:#3A3233; --s1:#6E2A32; --s2:#C4535F; --s3:#F6B3B9;
+  --on0:#A79A97; --on1:#F0A5AC; --on2:#FFFFFF; --on3:#3A1215;
   --warn:#E4B45C; --warn-bg:#332916;
   --good:#63C48D;
   --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 30px -22px rgba(0,0,0,.9);
@@ -246,6 +246,7 @@ footer b{color:var(--ink-3)}
     <button class="chip" data-f="published" aria-pressed="false" type="button">업로드 완료</button>
     <button class="chip" data-f="visited" aria-pressed="false" type="button">방문 완료</button>
     <button class="chip" data-f="confirmed" aria-pressed="false" type="button">확정</button>
+    <button class="chip" data-f="pending" aria-pressed="false" type="button">미정</button>
     <span class="count" id="count"></span>
   </div>
 
@@ -310,6 +311,7 @@ let ROWS = [];
 let PKG = null;
 
 const STAGES = [
+  {key:'pending',   label:'미정',        color:'var(--s0)', ink:'var(--on0)'},
   {key:'confirmed', label:'확정',        color:'var(--s1)', ink:'var(--on1)'},
   {key:'visited',   label:'방문 완료',   color:'var(--s2)', ink:'var(--on2)'},
   {key:'published', label:'업로드 완료', color:'var(--s3)', ink:'var(--on3)'},
@@ -585,6 +587,7 @@ function render(){
   /* KPI */
   const pub = scoped.filter(r=>r.status==='published');
   const visited = scoped.filter(r=>r.status==='published'||r.status==='visited');
+  const undecided = scoped.filter(r=>r.status==='pending');
   const sum = pub.reduce((a,r)=>a+r.views,0);
   const scopeName = mode==='round'
     ? (round==='all' ? '전체 회차' : round+'차')
@@ -592,7 +595,10 @@ function render(){
 
   const K = {
     creators:  ['대상 크리에이터', `${scoped.length}<small>명</small>`, scopeName],
-    visited:   ['방문 완료', `${visited.length}<small>명</small>`, `잔여 ${scoped.length-visited.length}명 일정 조율`],
+    visited:   ['방문 완료', `${visited.length}<small>명</small>`,
+                 undecided.length
+                   ? `잔여 ${scoped.length-visited.length}명 (미정 ${undecided.length}명)`
+                   : `잔여 ${scoped.length-visited.length}명 일정 조율`],
     published: ['업로드 완료', `${pub.length}<small>편</small>`, `${visited.length-pub.length}편 업로드 대기`],
     views:     ['누적 조회수', pub.length?fmt(sum):'—', `업로드 ${pub.length}편 합산`],
     avg:       ['평균 조회수', pub.length?fmt(Math.round(sum/pub.length)):'—', '콘텐츠 1편 기준'],
@@ -642,7 +648,7 @@ function render(){
   });
 
   const cell = (r,k)=>{
-    const s2=STAGE[r.status];
+    const s2=STAGE[r.status] || STAGE.pending;
     switch(k){
       case 'round': return `<td><span class="rd">${r.round}차</span></td>`;
       case 'handle': return `<td><span class="handle${r.masked?' masked':''}">${r.handle}</span></td>`;
