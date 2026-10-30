@@ -302,7 +302,8 @@ const FIREBASE_CONFIG = {
 let META = { title:'', brand:'', campaign:'', period:'', platform:'', manager:'Eight Labs' };
 let CONFIG = {
   kpis:{creators:true,visited:true,published:true,views:true,avg:true},
-  cols:{round:true,handle:true,followers:true,platform:true,status:true,visit:true,post:true,views:true,url:true},
+  cols:{round:true,handle:true,name:true,followers:true,platform:true,status:true,
+        visit:true,visitTime:true,post:true,views:true,url:true},
   pipeline:true, rounds:true, dates:true
 };
 let ROWS = [];
@@ -403,11 +404,13 @@ async function loadClient(user){
       return {
         round: Number(v.round) || 1,
         handle: v.handle || '',
+        name: v.name || '',
         masked: v.masked === true || !String(v.handle || '').startsWith('@'),
         followers: v.followers ?? null,
         platform: v.platform || 'Instagram',
         status: v.status || 'confirmed',
         visit: v.visit || null,
+        visitTime: v.visitTime || null,
         post: v.post || null,
         views: v.views ?? null,
         url: v.url || null,
@@ -465,10 +468,12 @@ const ROUNDS = [...new Set(ROWS.map(r=>r.round))].sort((a,b)=>a-b);
 const COLS = [
   {k:'round',     lb:'회차'},
   {k:'handle',    lb:'크리에이터'},
+  {k:'name',      lb:'이름'},
   {k:'followers', lb:'팔로워', r:true, sort:true},
   {k:'platform',  lb:'플랫폼'},
   {k:'status',    lb:'상태'},
   {k:'visit',     lb:'방문일'},
+  {k:'visitTime', lb:'방문시간'},
   {k:'post',      lb:'업로드일'},
   {k:'views',     lb:'조회수', r:true, sort:true},
   {k:'url',       lb:'콘텐츠'},
@@ -641,10 +646,12 @@ function render(){
     switch(k){
       case 'round': return `<td><span class="rd">${r.round}차</span></td>`;
       case 'handle': return `<td><span class="handle${r.masked?' masked':''}">${r.handle}</span></td>`;
+      case 'name': return `<td>${(r.name && !r.masked) ? esc(r.name) : '<span class="dash">—</span>'}</td>`;
       case 'followers': return `<td class="r">${r.followers?`<span class="num">${fmt(r.followers)}</span>`:'<span class="dash">—</span>'}</td>`;
       case 'platform': return `<td><span class="plat">${r.platform}</span></td>`;
       case 'status': return `<td><span class="st"><span class="i" style="background:${s2.color}"></span>${s2.label}</span></td>`;
       case 'visit': return `<td class="mono">${md(r.visit) ?? '<span class="dash">—</span>'}</td>`;
+      case 'visitTime': return `<td class="mono">${r.visitTime ? esc(r.visitTime) : '<span class="dash">—</span>'}</td>`;
       case 'post': return `<td class="mono">${md(r.post) ?? '<span class="dash">—</span>'}</td>`;
       case 'views': {
         const bar = r.views ? Math.max(4, Math.round(r.views/maxViews*116)) : 0;
