@@ -1,0 +1,11 @@
+{
+  "adminPin": "8888",
+  "publicUrl": "",
+  "claw": {
+    "title": "EIGHT 인형뽑기",
+    "winRate": 30,
+    "dollCount": 14,
+    "playSeconds": 20,
+    "playsPerDay": 1
+  }
+}

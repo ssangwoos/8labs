@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EIGHT 성수 게임센터</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root { --ink:#2B2B3A; --pink:#FF5C8A; --cream:#FFF4E8; --mint:#2FCFAE; --yellow:#FFD45C; --line:#EDE3D8; --mute:#8a8a9c; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--cream); font-family:Pretendard, "Noto Sans KR", sans-serif; color:var(--ink); min-height:100vh; }
+  .wrap { max-width:1180px; margin:0 auto; padding:44px 32px 80px; }
+  .head { display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap; }
+  .logo { font-size:15px; font-weight:900; letter-spacing:5px; }
+  .logo b { color:var(--pink); }
+  h1 { font-size:42px; font-weight:900; letter-spacing:-1.5px; margin-top:8px; }
+  .server { background:#fff; border-radius:18px; padding:14px 20px; font-size:14px; font-weight:700; color:var(--mute); }
+  .server b { color:var(--ink); font-size:16px; display:block; margin-top:2px; font-family:ui-monospace, Consolas, monospace; }
+  .dot { display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--mint); margin-right:6px; vertical-align:1px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:22px; margin-top:34px; }
+  .g { background:#fff; border-radius:28px; padding:28px; display:flex; flex-direction:column; gap:18px; }
+  .g .art { height:150px; border-radius:20px; background:var(--pink); display:grid; place-items:center; font-size:76px; position:relative; overflow:hidden; }
+  .g .art::before { content:''; position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.25) 4px, transparent 4px); background-size:30px 30px; }
+  .g h2 { font-size:26px; font-weight:900; display:flex; align-items:center; gap:10px; }
+  .badge { font-size:12px; font-weight:900; padding:5px 10px; border-radius:999px; background:var(--mint); color:#fff; }
+  .badge.soon { background:#E7DCCF; color:var(--mute); }
+  .g p { color:var(--mute); font-size:15px; font-weight:600; line-height:1.5; }
+  .nums { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+  .nums div { background:var(--cream); border-radius:14px; padding:10px 12px; }
+  .nums small { font-size:12px; font-weight:800; color:var(--mute); }
+  .nums b { display:block; font-size:22px; font-weight:900; }
+  .acts { display:flex; gap:8px; flex-wrap:wrap; }
+  .btn { text-decoration:none; border-radius:12px; padding:12px 16px; font-weight:800; font-size:15px; background:var(--pink); color:#fff; }
+  .btn.dark { background:var(--ink); }
+  .btn.ghost { background:#fff; color:var(--ink); border:1px solid var(--line); }
+  .g.soon { background:transparent; border:3px dashed #E7D6C4; justify-content:center; align-items:center; text-align:center; min-height:420px; }
+  .g.soon .art { background:#F3E9DE; width:100%; }
+  .guide { margin-top:40px; background:#fff; border-radius:28px; padding:28px 32px; }
+  .guide h3 { font-size:20px; font-weight:900; margin-bottom:14px; }
+  .guide ol { padding-left:22px; display:flex; flex-direction:column; gap:10px; font-size:15px; font-weight:600; line-height:1.55; }
+  .guide code { background:var(--cream); padding:2px 8px; border-radius:6px; font-family:ui-monospace, Consolas, monospace; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div><div class="logo">EIGHT <b>SEONGSU</b></div><h1>에이트 성수 게임센터</h1></div>
+    <div class="server"><span class="dot" id="dot"></span>매장 채널<b id="addr">—</b></div>
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <div class="guide">
+    <h3>매장에서 켜는 순서</h3>
+    <ol>
+      <li>65인치 TV 브라우저에서 <b>TV 화면 열기</b> → 더블클릭으로 전체화면 (TV는 인터넷만 연결돼 있으면 돼요)</li>
+      <li>소리를 쓰려면 TV 화면 왼쪽 아래 <b>소리 켜기</b>를 한 번 눌러 주세요</li>
+      <li>손님은 TV의 QR을 찍으면 바로 조이스틱이 됩니다 — 와이파이든 LTE든 상관없어요 (GitHub에 올린 뒤)</li>
+      <li><b>관리자</b>는 사무실 PC·직원 폰 어디서든 열 수 있어요. 제품 이미지를 올리면 TV에 바로 반영</li>
+    </ol>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="lib/mqtt.min.js"></script>
+<script src="lib/net.js"></script>
+<script>
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+const GAMES = [
+  { id: 'claw', name: '인형뽑기', emoji: '🧸', desc: 'TV 속 인형뽑기 기계를 폰 조이스틱으로 조종. 인형이 안고 있는 제품이 경품.', tv: 'claw/tv.html', admin: 'claw/admin.html', play: 'claw/play.html' },
+];
+const status = {};
+const keep = new URLSearchParams(location.search).get('broker') ? location.search : '';
+function render() {
+  const cards = GAMES.map(g => {
+    const st = status[g.id] || {}; const on = st.online && Date.now() - st.ts < 30000;
+    return `
+    <div class="g">
+      <div class="art">${g.emoji}</div>
+      <h2>${esc(g.name)} <span class="badge ${on ? '' : 'soon'}">${on ? '운영 중' : 'TV 꺼짐'}</span></h2>
+      <p>${esc(g.desc)}</p>
+      <div class="nums">
+        <div><small>TV</small><b>${on ? 'ON' : 'OFF'}</b></div>
+        <div><small>접속 폰</small><b>${on ? st.players || 0 : 0}</b></div>
+        <div><small>대기</small><b>${on ? st.queue || 0 : 0}</b></div>
+        <div><small>오늘 당첨</small><b>${st.winsToday || 0}</b></div>
+      </div>
+      <div class="acts">
+        <a class="btn" href="${g.tv}${keep}" target="_blank">TV 화면 열기</a>
+        <a class="btn dark" href="${g.admin}${keep}">관리자</a>
+        <a class="btn ghost" href="${st.playUrl || g.play + keep}" target="_blank">조이스틱 테스트</a>
+      </div>
+    </div>`;
+  });
+  cards.push(`<div class="g soon"><div class="art">＋</div><h2 style="justify-content:center">다음 게임 <span class="badge soon">준비 중</span></h2><p>룰렛, 스크래치 복권, 퀴즈 등<br>새 게임이 이 자리에 추가됩니다.</p></div>`);
+  document.getElementById('grid').innerHTML = cards.join('');
+}
+document.getElementById('addr').textContent = Net.room;
+Net.connect({
+  prefix: 'dash', subscribe: [Net.T.tv],
+  onStatus(ok) { document.getElementById('dot').style.background = ok ? '#2FCFAE' : '#FF5C8A'; },
+  onMessage(topic, m) { if (m) { status.claw = m; render(); } },
+});
+render(); setInterval(render, 5000);
+</script>
+</body>
+</html>
