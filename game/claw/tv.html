@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EIGHT 인형뽑기 — TV</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root { --ink:#2B2B3A; --pink:#FF5C8A; --cream:#FFF4E8; --mint:#2FCFAE; --yellow:#FFD45C; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#1d1d27; font-family:Pretendard, "Noto Sans KR", "Malgun Gothic", sans-serif; color:var(--ink); }
+  body.hidecursor { cursor:none; }
+  #stage { position:absolute; left:0; top:0; width:1080px; height:1920px; transform-origin:0 0; background:var(--cream); overflow:hidden; }
+  #stage::before { content:''; position:absolute; inset:0; background-image:radial-gradient(#FFE3CC 3px, transparent 3px); background-size:44px 44px; opacity:.8; }
+  canvas { position:absolute; left:0; top:104px; }
+  .brand { position:absolute; left:50px; right:50px; top:26px; height:60px; display:flex; align-items:center; justify-content:space-between; }
+  .brand .logo { font-size:34px; font-weight:900; letter-spacing:6px; }
+  #panel { position:absolute; left:40px; top:1284px; width:1000px; height:612px; display:flex; flex-direction:column; gap:20px; }
+  .brand .logo b { color:var(--pink); }
+  .brand .loc { font-size:22px; font-weight:700; background:var(--ink); color:#fff; padding:8px 18px; border-radius:999px; }
+  .card { background:#fff; border-radius:32px; padding:26px 32px; }
+  .qrcard { display:flex; gap:40px; align-items:center; height:300px; padding:24px 40px; }
+  #qr { width:252px; height:252px; flex:none; background:#fff; border-radius:18px; display:grid; place-items:center; }
+  #qr svg, #qr img { width:252px; height:252px; display:block; }
+  .qrtext h2 { font-size:64px; font-weight:900; line-height:1.1; letter-spacing:-2px; }
+  .qrtext h2 em { font-style:normal; color:var(--pink); }
+  .qrtext p { margin-top:16px; font-size:26px; font-weight:600; color:#6c6c7e; line-height:1.45; }
+  .status { display:flex; gap:18px; height:132px; }
+  .status .card { flex:1; padding:20px 26px; min-width:0; }
+  .status .card.wide { flex:1.6; }
+  .label { font-size:20px; font-weight:700; color:#8a8a9c; }
+  .big { font-size:42px; font-weight:900; margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .big small { font-size:24px; font-weight:800; color:#8a8a9c; margin-left:4px; }
+  #nowCard.on { background:var(--pink); color:#fff; }
+  #nowCard.on .label { color:rgba(255,255,255,.8); }
+  .prizes { flex:1; min-height:0; display:flex; align-items:center; gap:22px; padding:18px 28px; }
+  .prizes h3 { font-size:26px; font-weight:900; line-height:1.2; flex:none; width:90px; }
+  #lineup { flex:1; display:grid; grid-template-columns:repeat(6, 1fr); gap:12px; overflow:hidden; }
+  .pi { background:var(--cream); border-radius:14px; padding:7px; text-align:center; min-width:0; }
+  .pi .im { height:66px; border-radius:10px; background:#fff center/contain no-repeat; }
+  .pi span { display:block; font-size:15px; font-weight:700; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #winList { list-style:none; display:flex; flex-direction:column; gap:4px; margin-top:6px; }
+  #winList li { font-size:21px; font-weight:700; display:flex; justify-content:space-between; gap:12px; }
+  #winList li span:last-child { color:var(--pink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%; }
+  #winList .empty { color:#a0a0b0; font-weight:600; }
+
+  #overlay { position:absolute; left:0; top:104px; width:1080px; height:1160px; display:grid; place-items:center; pointer-events:none; }
+  .banner { background:#fff; border-radius:40px; padding:46px 64px; text-align:center; transform:scale(.6); opacity:0; transition:all .35s cubic-bezier(.2,1.4,.4,1); box-shadow:0 30px 0 rgba(43,43,58,.12); }
+  .banner.show { transform:scale(1); opacity:1; }
+  .banner .t1 { font-size:34px; font-weight:800; color:#8a8a9c; }
+  .banner .t2 { font-size:78px; font-weight:900; letter-spacing:-2px; margin-top:6px; }
+  .banner .t2 em { font-style:normal; color:var(--pink); }
+  .banner .t3 { font-size:28px; font-weight:700; margin-top:16px; background:var(--yellow); display:inline-block; padding:10px 24px; border-radius:999px; }
+  #conn { position:absolute; right:24px; bottom:4px; font-size:16px; font-weight:700; color:#b0a596; }
+  #sound { position:absolute; right:250px; top:38px; font-size:16px; font-weight:700; background:#fff; border:0; border-radius:999px; padding:8px 16px; cursor:pointer; color:var(--ink); font-family:inherit; }
+  #tip { position:absolute; left:50%; top:24px; transform:translateX(-50%); background:var(--ink); color:#fff; font-size:18px; padding:10px 20px; border-radius:999px; opacity:0; transition:opacity .4s; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="brand"><div class="logo">EIGHT <b>GAME</b></div><div class="loc">에이트 성수</div></div>
+  <canvas id="cv" width="1080" height="1160"></canvas>
+  <div id="panel">
+    <div class="card qrcard">
+      <div id="qr"></div>
+      <div class="qrtext">
+        <h2>폰으로 찍고<br><em>인형뽑기!</em></h2>
+        <p>카메라로 QR을 찍으면 내 폰이 조이스틱이 돼요.<br>뽑은 인형의 제품을 드려요 🎁</p>
+      </div>
+    </div>
+    <div class="status">
+      <div class="card" id="nowCard"><div class="label">지금 플레이</div><div class="big" id="now">대기 중</div></div>
+      <div class="card"><div class="label">기다리는 사람</div><div class="big" id="queue">0<small>명</small></div></div>
+      <div class="card wide"><div class="label">🎉 최근 당첨</div><ul id="winList"><li class="empty">첫 당첨자가 되어 보세요!</li></ul></div>
+    </div>
+    <div class="card prizes"><h3>오늘의<br>경품</h3><div id="lineup"></div></div>
+  </div>
+  <div id="overlay"><div class="banner" id="banner"><div class="t1" id="b1"></div><div class="t2" id="b2"></div><div class="t3" id="b3"></div></div></div>
+  <button id="sound">🔇 소리 켜기</button>
+  <div id="conn">연결 중…</div>
+  <div id="tip">더블클릭하면 전체화면</div>
+</div>
+<script src="../config.js"></script>
+<script src="../lib/mqtt.min.js"></script>
+<script src="../lib/net.js"></script>
+<script src="../lib/qrcode.js"></script>
+<script src="doll.js"></script>
+<script>
+// ---------- 화면 맞춤 ----------
+const stage = document.getElementById('stage');
+// 세로 화면 1080×1920. TV가 가로로만 출력하면 주소 끝에 ?rotate=90 (또는 -90)
+const SW = 1080, SH = 1920;
+const ROT = ({ '90': 90, '-90': -90, '270': -90 })[new URLSearchParams(location.search).get('rotate')] || 0;
+function fit() {
+  const W = innerWidth, H = innerHeight;
+  if (!ROT) {
+    const k = Math.min(W / SW, H / SH);
+    stage.style.transform = `translate(${(W - SW * k) / 2}px, ${(H - SH * k) / 2}px) scale(${k})`;
+  } else {
+    const k = Math.min(W / SH, H / SW);
+    const tx = ROT === 90 ? (W - SH * k) / 2 + SH * k : (W - SH * k) / 2;
+    const ty = ROT === 90 ? (H - SW * k) / 2 : (H - SW * k) / 2 + SW * k;
+    stage.style.transform = `translate(${tx}px, ${ty}px) rotate(${ROT}deg) scale(${k})`;
+  }
+}
+addEventListener('resize', fit); fit();
+addEventListener('dblclick', () => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); });
+let cursorT; addEventListener('mousemove', () => { document.body.classList.remove('hidecursor'); clearTimeout(cursorT); cursorT = setTimeout(() => document.body.classList.add('hidecursor'), 2500); });
+const tip = document.getElementById('tip'); tip.style.opacity = 1; setTimeout(() => tip.style.opacity = 0, 4000);
+
+// ---------- 소리 ----------
+let actx = null;
+document.getElementById('sound').onclick = (e) => {
+  if (!actx) { actx = new (window.AudioContext || window.webkitAudioContext)(); e.target.textContent = '🔊 소리 켜짐'; beep(660, .1); }
+  else { actx.close(); actx = null; e.target.textContent = '🔇 소리 켜기'; }
+};
+function beep(f, d, type = 'square', vol = .06, slide = 0) {
+  if (!actx) return;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.value = f;
+  if (slide) o.frequency.linearRampToValueAtTime(f + slide, actx.currentTime + d);
+  g.gain.value = vol; g.gain.linearRampToValueAtTime(0, actx.currentTime + d);
+  o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + d);
+}
+function fanfare() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, .18, 'square', .07), i * 120)); }
+
+// ---------- 기계 레이아웃 ----------
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const M = { x: 40, y: 20, w: 1000, h: 1120 };            // 기계 외곽 (세로형)
+const G = { l: 90, r: 990, t: 216, b: 960 };             // 유리 내부
+const RAIL_Y = 236, REST_Y = 296;
+const CHUTE = { l: 100, r: 320, top: 730 };              // 경품 투입구
+const CHUTE_X = (CHUTE.l + CHUTE.r) / 2;
+const PILE = { l: 380, r: 960 };
+const FLOOR_Y = 940;
+const ROW_BACK = FLOOR_Y - 108, ROW_FRONT = FLOOR_Y - 38;
+const HOLD = 158;                                        // 집게 중심 ↔ 인형 중심 거리
+
+let cfg = { title: 'EIGHT 인형뽑기', dollCount: 14, playSeconds: 20 };
+let productList = [];
+const imgCache = {};
+function imgFor(p) {
+  if (!p || !p.image) return null;
+  if (!imgCache[p.image]) { const im = new Image(); im.src = p.image; imgCache[p.image] = im; }
+  return imgCache[p.image];
+}
+
+let dolls = [];
+let pickCounter = 0;
+function nextProduct() {
+  if (!productList.length) return null;
+  // 화면에 적게 나와 있는 제품을 우선 배치
+  const counts = {}; dolls.forEach(d => { if (d.pid) counts[d.pid] = (counts[d.pid] || 0) + 1; });
+  const sorted = productList.slice().sort((a, b) => (counts[a.id] || 0) - (counts[b.id] || 0));
+  const minC = counts[sorted[0].id] || 0;
+  const pool = sorted.filter(p => (counts[p.id] || 0) === minC);
+  return pool[(pickCounter++) % pool.length];
+}
+function slotPositions(n) {
+  const back = Math.ceil(n / 2), front = n - back, out = [];
+  const W = PILE.r - PILE.l;
+  for (let i = 0; i < back; i++) out.push({ x: PILE.l + 50 + (W - 100) * (back === 1 ? .5 : i / (back - 1)), y: ROW_BACK });
+  for (let i = 0; i < front; i++) out.push({ x: PILE.l + 90 + (W - 180) * (front === 1 ? .5 : i / (front - 1)), y: ROW_FRONT });
+  return out;
+}
+function makeDoll(x, y) {
+  const p = nextProduct();
+  return { x, y, rot: (Math.random() - .5) * .35, type: Math.floor(Math.random() * DOLL_TYPES.length), pid: p ? p.id : null, img: imgFor(p), vy: 0, landY: y, falling: false, win: false, id: Math.random() };
+}
+function layoutDolls() {
+  dolls = [];
+  slotPositions(cfg.dollCount).forEach(s => dolls.push(makeDoll(s.x + (Math.random() - .5) * 26, s.y + (Math.random() - .5) * 10)));
+  sortDolls();
+}
+function sortDolls() { dolls.sort((a, b) => a.landY - b.landY); }
+function refreshDollProducts() {
+  const ids = new Set(productList.map(p => p.id));
+  dolls.forEach(d => {
+    if (!d.pid || !ids.has(d.pid)) { const p = nextProduct(); d.pid = p ? p.id : null; d.img = imgFor(p); }
+    else d.img = imgFor(productList.find(p => p.id === d.pid));
+  });
+}
+
+// ---------- 게임 상태 ----------
+const S = { phase: 'idle', x: 540, y: REST_Y, open: 1, input: 0, timeLeft: 0, held: null, target: null, luck: false, slipAt: null, t: 0, player: null, dropAsked: false, lastSent: '' };
+const HOME_X = 540;
+
+function setNow(name) {
+  document.getElementById('now').textContent = name || '대기 중';
+  document.getElementById('nowCard').classList.toggle('on', !!name);
+}
+function showBanner(t1, t2, t3, ms) {
+  document.getElementById('b1').textContent = t1;
+  document.getElementById('b2').innerHTML = t2;
+  const b3 = document.getElementById('b3'); b3.textContent = t3 || ''; b3.style.display = t3 ? 'inline-block' : 'none';
+  const b = document.getElementById('banner'); b.classList.add('show');
+  clearTimeout(showBanner.t); if (ms) showBanner.t = setTimeout(() => b.classList.remove('show'), ms);
+}
+function hideBanner() { document.getElementById('banner').classList.remove('show'); }
+
+function startTurn(name, seconds) {
+  S.player = name; S.phase = 'play'; S.timeLeft = seconds; S.input = 0; S.dropAsked = false; S.held = null; S.target = null; S.open = 1;
+  setNow(name);
+  showBanner('', `<em>${esc(name)}</em>님 차례!`, '', 1400);
+  beep(880, .12); setTimeout(() => beep(1175, .15), 130);
+}
+function doDrop(luck) {
+  if (S.phase !== 'play') return;
+  S.luck = luck; S.input = 0;
+  // 집게 바로 아래 인형 찾기
+  let best = null, bd = 64;
+  for (const d of dolls) { if (d.falling) continue; const dx = Math.abs(d.x - S.x); if (dx < bd) { bd = dx; best = d; } }
+  // 같은 거리라면 앞줄(아래쪽) 우선
+  if (best) for (const d of dolls) if (!d.falling && Math.abs(d.x - S.x) < 64 && d.landY > best.landY && Math.abs(Math.abs(d.x - S.x) - bd) < 22) best = d;
+  S.target = best;
+  S.targetY = best ? best.y - HOLD : FLOOR_Y - 95;
+  S.phase = 'down';
+  beep(300, .5, 'sawtooth', .03, -120);
+}
+function report(win, pid) {
+  if (S.reported) return; S.reported = true;
+  send({ t: 'result', win, productId: pid || null });
+}
+
+// ---------- 루프 ----------
+let last = performance.now(), spawnT = 0, stateT = 0;
+function step(dt) {
+  S.t += dt;
+  const minX = G.l + 70, maxX = G.r - 70;
+  switch (S.phase) {
+    case 'idle':
+      S.x += Math.sign(HOME_X - S.x) * Math.min(Math.abs(HOME_X - S.x), 260 * dt);
+      S.y += Math.sign(REST_Y - S.y) * Math.min(Math.abs(REST_Y - S.y), 260 * dt);
+      S.open = Math.min(1, S.open + dt * 2);
+      spawnT -= dt;
+      if (spawnT <= 0 && dolls.filter(d => !d.win).length < cfg.dollCount) {
+        spawnT = .35;
+        const slots = slotPositions(cfg.dollCount);
+        // 가장 비어 있는 자리 찾기
+        let bestS = slots[0], bestD = -1;
+        for (const s of slots) { const md = Math.min(...dolls.map(d => Math.hypot(d.x - s.x, (d.landY - s.y) * 2)), 9999); if (md > bestD) { bestD = md; bestS = s; } }
+        const d = makeDoll(bestS.x + (Math.random() - .5) * 20, G.t + 40);
+        d.landY = bestS.y; d.falling = true; d.vy = 0; dolls.push(d); sortDolls();
+      }
+      break;
+    case 'play':
+      S.x = Math.max(minX, Math.min(maxX, S.x + S.input * 560 * dt));
+      S.timeLeft -= dt;
+      if (S.timeLeft <= 0 && !S.dropAsked) { S.dropAsked = true; S.timeLeft = 0; send({ t: 'timeout' }); }
+      break;
+    case 'down':
+      S.y += 420 * dt;
+      if (S.y >= S.targetY) { S.y = S.targetY; S.phase = 'close'; S.t = 0; beep(180, .15, 'square', .05); }
+      break;
+    case 'close':
+      S.open = Math.max(S.target ? .5 : 0, 1 - S.t / .45);
+      if (S.t > .55) {
+        if (S.target) {
+          S.held = S.target; S.held.grabbed = true;
+          S.slipAt = S.luck ? null : REST_Y + (S.targetY - REST_Y) * (.2 + Math.random() * .55);
+          // 운이 없으면 가끔은 투입구 가는 길에 떨어뜨리기
+          S.slipOnCarry = !S.luck && Math.random() < .35;
+          if (S.slipOnCarry) S.slipAt = null;
+        }
+        S.phase = 'up';
+      }
+      break;
+    case 'up':
+      S.y -= 300 * dt;
+      if (S.held && S.slipAt !== null && S.y <= S.slipAt) dropHeld(false);
+      if (S.y <= REST_Y) { S.y = REST_Y; S.phase = S.held ? 'carry' : 'miss'; S.t = 0; }
+      break;
+    case 'carry': {
+      const dir = Math.sign(CHUTE_X - S.x);
+      S.x += dir * Math.min(Math.abs(CHUTE_X - S.x), 330 * dt);
+      if (S.held && S.slipOnCarry && S.x < PILE.l + 160 && S.x > PILE.l + 40) dropHeld(false);
+      if (Math.abs(CHUTE_X - S.x) < 1) { S.phase = 'release'; S.t = 0; }
+      break;
+    }
+    case 'release':
+      S.open = Math.min(1, S.t / .35);
+      if (S.held && S.t > .15) dropHeld(true);
+      if (S.t > .4 && !S.held) { S.phase = 'miss'; S.t = 0; }
+      break;
+    case 'miss':
+      S.open = Math.min(1, S.open + dt * 2);
+      // 떨어지는 인형이 모두 멈추면 결과 보고
+      if (S.t > .7 && !dolls.some(d => d.falling && !d.win)) {
+        if (!dolls.some(d => d.win)) {
+          report(false);
+          showBanner('아쉬워요!', '다시 <em>도전</em>하세요', '', 2600);
+          beep(392, .2, 'triangle', .08); setTimeout(() => beep(330, .3, 'triangle', .08), 200);
+          S.phase = 'done'; S.t = 0;
+        }
+      }
+      break;
+    case 'done':
+      if (S.t > 2.8) { S.phase = 'idle'; setNow(null); }
+      break;
+    case 'won':
+      if (S.t > 6) { S.phase = 'idle'; setNow(null); }
+      break;
+  }
+  if (S.held) { S.held.x = S.x; S.held.y = S.y + HOLD; S.held.rot *= .9; }
+
+  // 낙하 물리
+  for (const d of dolls) {
+    if (!d.falling) continue;
+    d.vy += 2000 * dt; d.y += d.vy * dt;
+    if (d.win) {
+      if (d.y > G.b + 260) { d.gone = true; onWinDoll(d); }
+    } else if (d.y >= d.landY) {
+      d.y = d.landY;
+      if (d.vy > 500) { d.vy = -d.vy * .25; beep(140, .06, 'triangle', .05); } else { d.vy = 0; d.falling = false; }
+    }
+  }
+  dolls = dolls.filter(d => !d.gone);
+
+  // 컨트롤러에 상태 전달
+  stateT -= dt;
+  const key = S.phase + ':' + Math.ceil(S.timeLeft);
+  if (S.player && (key !== S.lastSent || stateT <= 0)) { S.lastSent = key; stateT = 1; send({ t: 'state', phase: S.phase, timeLeft: Math.ceil(S.timeLeft) }); }
+}
+function dropHeld(intoChute) {
+  const d = S.held; if (!d) return;
+  S.held = null; d.grabbed = false; d.falling = true; d.vy = 0;
+  if (intoChute) { d.win = true; }
+  else {
+    d.x = Math.max(PILE.l + 40, Math.min(PILE.r - 40, d.x));
+    d.landY = FLOOR_Y - 70 + Math.random() * 40; d.rot = (Math.random() - .5) * .6; sortDolls();
+    beep(220, .25, 'sawtooth', .04, -100);
+  }
+}
+function onWinDoll(d) {
+  S.phase = 'won'; S.t = 0;
+  report(true, d.pid);
+  fanfare(); confetti();
+}
+
+// ---------- 그리기 ----------
+const parts = [];
+function confetti() {
+  const cols = ['#FF5C8A', '#FFD45C', '#2FCFAE', '#6C8CFF', '#FF9F43'];
+  for (let i = 0; i < 160; i++) parts.push({ x: 540 + (Math.random() - .5) * 300, y: 480, vx: (Math.random() - .5) * 1300, vy: -Math.random() * 1200 - 300, r: Math.random() * 6.28, vr: (Math.random() - .5) * 12, c: cols[i % cols.length], life: 3.5 });
+}
+function drawMachine(time) {
+  // 몸체
+  ctx.fillStyle = '#FF5C8A'; rr(ctx, M.x, M.y, M.w, M.h, 48); ctx.fill();
+  ctx.fillStyle = '#E8457A'; rr(ctx, M.x, M.y + M.h - 140, M.w, 140, 48); ctx.fill();
+  ctx.fillRect(M.x, M.y + M.h - 140, M.w, 60);
+  // 상단 간판
+  ctx.fillStyle = '#2B2B3A'; rr(ctx, M.x + 40, M.y + 26, M.w - 80, 140, 34); ctx.fill();
+  // 전구
+  for (let i = 0; i < 20; i++) {
+    const bx = M.x + 80 + i * ((M.w - 160) / 19);
+    const on = (Math.floor(time * 4) + i) % 3 === 0;
+    ctx.fillStyle = on ? '#FFE680' : '#6B5A3A';
+    ctx.beginPath(); ctx.arc(bx, M.y + 44, 6, 0, 6.28); ctx.fill();
+    ctx.beginPath(); ctx.arc(bx, M.y + 148, 6, 0, 6.28); ctx.fill();
+  }
+  ctx.fillStyle = '#fff'; ctx.font = '900 64px Pretendard, "Noto Sans KR", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(cfg.title || 'EIGHT 인형뽑기', M.x + M.w / 2, M.y + 98);
+
+  // 유리 안쪽 배경
+  ctx.fillStyle = '#E9F6FF'; ctx.fillRect(G.l, G.t, G.r - G.l, G.b - G.t);
+  ctx.fillStyle = '#D8EEFC';
+  for (let yy = G.t + 30; yy < G.b; yy += 60) for (let xx = G.l + 30 + ((yy / 60) % 2) * 30; xx < G.r; xx += 60) { ctx.beginPath(); ctx.arc(xx, yy, 5, 0, 6.28); ctx.fill(); }
+  // 바닥
+  ctx.fillStyle = '#BFE3F7'; ctx.fillRect(G.l, FLOOR_Y - 10, G.r - G.l, G.b - FLOOR_Y + 10);
+  // 레일
+  ctx.fillStyle = '#9AA3BB'; rr(ctx, G.l + 10, RAIL_Y - 14, G.r - G.l - 20, 22, 11); ctx.fill();
+}
+function drawChuteBack() {
+  ctx.fillStyle = '#C7E7FA'; ctx.fillRect(CHUTE.l, CHUTE.top, CHUTE.r - CHUTE.l, G.b - CHUTE.top);
+  ctx.fillStyle = '#A9D8F2'; ctx.fillRect(CHUTE.l + 18, G.b - 40, CHUTE.r - CHUTE.l - 36, 40);
+}
+function drawChuteFront() {
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.fillRect(CHUTE.l, CHUTE.top, CHUTE.r - CHUTE.l, G.b - CHUTE.top);
+  ctx.fillStyle = '#FFD45C'; rr(ctx, CHUTE.l - 6, CHUTE.top - 16, CHUTE.r - CHUTE.l + 12, 22, 11); ctx.fill();
+  ctx.fillStyle = '#2B2B3A'; ctx.font = '900 30px Pretendard, "Noto Sans KR", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('PRIZE ▼', CHUTE_X, CHUTE.top + 60);
+}
+function drawClaw() {
+  const x = S.x, y = S.y;
+  // 캐리지
+  ctx.fillStyle = '#5B6380'; rr(ctx, x - 44, RAIL_Y - 24, 88, 40, 12); ctx.fill();
+  // 줄
+  ctx.strokeStyle = '#5B6380'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(x, RAIL_Y + 10); ctx.lineTo(x, y - 30); ctx.stroke();
+  // 집게발
+  const a = .12 + S.open * .62;
+  ctx.strokeStyle = '#B5BCD1'; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const s of [-1, 1]) {
+    const x0 = x + s * 22, y0 = y + 6;
+    const x1 = x0 + s * Math.sin(a) * 58, y1 = y0 + Math.cos(a) * 58;
+    const a2 = a - 0.95;
+    const x2 = x1 + s * Math.sin(a2) * 54, y2 = y1 + Math.cos(a2) * 54;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.fillStyle = '#8E96B0'; ctx.beginPath(); ctx.arc(x1, y1, 8, 0, 6.28); ctx.fill();
+  }
+  // 허브
+  ctx.fillStyle = '#7A84A3'; rr(ctx, x - 40, y - 34, 80, 44, 14); ctx.fill();
+  ctx.fillStyle = '#FF5C8A'; ctx.beginPath(); ctx.arc(x, y - 12, 9, 0, 6.28); ctx.fill();
+}
+function drawFront(time) {
+  // 유리 반사
+  ctx.fillStyle = 'rgba(255,255,255,0.28)';
+  ctx.beginPath(); ctx.moveTo(G.l + 520, G.t); ctx.lineTo(G.l + 600, G.t); ctx.lineTo(G.l + 400, G.b); ctx.lineTo(G.l + 320, G.b); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(G.l + 650, G.t); ctx.lineTo(G.l + 680, G.t); ctx.lineTo(G.l + 480, G.b); ctx.lineTo(G.l + 450, G.b); ctx.fill();
+  // 유리 테두리
+  ctx.strokeStyle = '#E8457A'; ctx.lineWidth = 16; ctx.strokeRect(G.l - 8, G.t - 8, G.r - G.l + 16, G.b - G.t + 16);
+  // 하단 경품 출구
+  const won = S.phase === 'won';
+  ctx.fillStyle = won && Math.floor(time * 6) % 2 ? '#FFE680' : '#2B2B3A';
+  rr(ctx, CHUTE.l, G.b + 40, CHUTE.r - CHUTE.l, 92, 22); ctx.fill();
+  ctx.fillStyle = won && Math.floor(time * 6) % 2 ? '#2B2B3A' : '#FFD45C';
+  ctx.font = '900 30px Pretendard, "Noto Sans KR", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('경품 출구', CHUTE_X, G.b + 86);
+  // 조작판 (장식)
+  const cpL = CHUTE.r + 40, cpW = G.r - cpL;
+  ctx.fillStyle = '#2B2B3A'; rr(ctx, cpL, G.b + 40, cpW, 92, 22); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '800 30px Pretendard, "Noto Sans KR", sans-serif';
+  const msg = S.phase === 'play' ? '◀  폰으로 움직이고  GRAB!  ▶' : (S.phase === 'idle' ? '아래 QR을 찍고 참여하세요 ↓' : '두근두근…');
+  ctx.fillText(msg, cpL + cpW / 2, G.b + 86);
+}
+function drawTimer() {
+  if (S.phase !== 'play') return;
+  const tl = Math.max(0, Math.ceil(S.timeLeft));
+  const warn = tl <= 5;
+  ctx.fillStyle = warn ? '#FF5C8A' : '#2B2B3A';
+  ctx.beginPath(); ctx.arc(G.r - 80, G.t + 90, 56, 0, 6.28); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '900 54px Pretendard, "Noto Sans KR", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(tl, G.r - 80, G.t + 94);
+  // 집게 위치 가이드
+  ctx.strokeStyle = 'rgba(255,92,138,0.35)'; ctx.setLineDash([10, 12]); ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(S.x, S.y + 70); ctx.lineTo(S.x, FLOOR_Y - 10); ctx.stroke(); ctx.setLineDash([]);
+}
+function drawIdleHint(time) {
+  if (S.phase !== 'idle' || document.getElementById('banner').classList.contains('show')) return;
+  const k = 1 + Math.sin(time * 3) * .03;
+  ctx.save(); ctx.translate(G.l + (G.r - G.l) / 2 + 40, 520); ctx.scale(k, k);
+  ctx.fillStyle = '#2B2B3A'; rr(ctx, -300, -60, 600, 120, 60); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '900 46px Pretendard, "Noto Sans KR", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('QR 찍고 도전하세요!', 0, 4);
+  ctx.restore();
+}
+function render(time) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  drawMachine(time);
+  drawChuteBack();
+  for (const d of dolls) if (!d.grabbed) drawDoll(ctx, d);
+  drawChuteFront();
+  if (S.held) drawDoll(ctx, S.held);
+  drawClaw();
+  drawFront(time);
+  drawTimer();
+  drawIdleHint(time);
+  for (const p of parts) {
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-7, -4, 14, 8); ctx.restore();
+  }
+}
+function loop(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  step(dt);
+  for (const p of parts) { p.vy += 1500 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt; p.vx *= .99; p.life -= dt; }
+  for (let i = parts.length - 1; i >= 0; i--) if (parts[i].life <= 0 || parts[i].y > 1300) parts.splice(i, 1);
+  render(now / 1000);
+  requestAnimationFrame(loop);
+}
+
+// ---------- 패널 ----------
+function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function renderLineup() {
+  const el = document.getElementById('lineup');
+  if (!productList.length) { el.innerHTML = '<div style="grid-column:1/-1;font-size:22px;color:#a0a0b0;font-weight:600">관리자 화면에서 경품을 등록하세요</div>'; return; }
+  el.innerHTML = productList.slice(0, 6).map(p => `<div class="pi"><div class="im" style="background-image:url('${esc(p.image)}')"></div><span>${esc(p.name || '경품')}</span></div>`).join('');
+}
+const winners = [];
+function renderWinners() {
+  const el = document.getElementById('winList');
+  if (!winners.length) { el.innerHTML = '<li class="empty">첫 당첨자가 되어 보세요!</li>'; return; }
+  el.innerHTML = winners.slice(0, 2).map(w => `<li><span>${esc(w.name)}님</span><span>${esc(w.productName)}</span></li>`).join('');
+}
+function renderQR(url) {
+  const q = qrcode(0, 'M'); q.addData(url); q.make();
+  document.getElementById('qr').innerHTML = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+}
+
+// ---------- 게임 호스트 (TV가 대기열·확률·재고·당첨 기록을 직접 관리) ----------
+const DEFAULTS = { title: 'EIGHT 인형뽑기', winRate: 30, dollCount: 14, playSeconds: 20, playsPerDay: 1, pinHash: '' };
+const LS = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+let settings = Object.assign({}, DEFAULTS, LS.get('eight_claw_settings', {}));
+const products = new Map(Object.entries(LS.get('eight_claw_products', {})));
+let log = LS.get('eight_claw_log', []);
+let plays = LS.get('eight_claw_plays', {});
+const players = new Map();   // id -> { name, last }
+let queue = [], active = null, pendingLuck = null, turnTimer = null;
+let playUrl = '';
+
+function today() { return new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); }
+function kstDay(iso) { return new Date(new Date(iso).getTime() + 9 * 3600e3).toISOString().slice(0, 10); }
+function activeProducts() { return [...products.values()].filter(p => p && p.enabled !== false && (p.stock === '' || p.stock == null || Number(p.stock) > 0)); }
+function playsLeft(id) {
+  const lim = Number(settings.playsPerDay) || 0; if (!lim) return 99;
+  return Math.max(0, lim - ((plays[today()] || {})[id] || 0));
+}
+function nameOf(id) { return (players.get(id) || {}).name || '플레이어'; }
+function down(m) { Net.pub(Net.T.down, m); }
+function toId(id, m) { down(Object.assign({ to: id }, m)); }
+
+function applyConfig() {
+  const prevCount = cfg.dollCount;
+  cfg = settings; productList = activeProducts();
+  if (prevCount !== cfg.dollCount || !dolls.length) layoutDolls(); else refreshDollProducts();
+  renderLineup();
+}
+function publishStatus() {
+  Net.pub(Net.T.tv, { online: true, ts: Date.now(), queue: queue.length, active: active ? nameOf(active) : null, players: players.size, winsToday: log.filter(l => kstDay(l.time) === today()).length, playUrl }, true);
+}
+function sendQueueInfo() {
+  queue.forEach((id, i) => toId(id, { t: 'queue', pos: i + 1 }));
+  document.getElementById('queue').innerHTML = queue.length + '<small>명</small>';
+  publishStatus();
+}
+function nextTurn() {
+  if (active) return;
+  while (queue.length) {
+    const id = queue.shift();
+    if (!players.has(id)) continue;
+    if (playsLeft(id) <= 0) { toId(id, { t: 'limit' }); continue; }
+    active = id; pendingLuck = null;
+    const d = today(); plays = { [d]: plays[d] || {} }; plays[d][id] = (plays[d][id] || 0) + 1; LS.set('eight_claw_plays', plays);
+    toId(id, { t: 'turn', seconds: settings.playSeconds });
+    S.reported = false; startTurn(nameOf(id), settings.playSeconds);
+    clearTimeout(turnTimer); turnTimer = setTimeout(() => endTurn(null), 90e3);
+    break;
+  }
+  sendQueueInfo();
+}
+function endTurn(result) {
+  clearTimeout(turnTimer);
+  const id = active; active = null; pendingLuck = null;
+  if (id) toId(id, Object.assign({ t: 'result', left: playsLeft(id) }, result || { win: false }));
+  setTimeout(nextTurn, 3500);
+  sendQueueInfo();
+}
+function hostDrop() {
+  if (!active || pendingLuck !== null) return;
+  pendingLuck = Math.random() * 100 < Number(settings.winRate);
+  doDrop(pendingLuck);
+}
+function makeCode() { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 5; i++) s += c[Math.floor(Math.random() * c.length)]; return s; }
+function hostResult(m) {
+  if (!active) return;
+  if (m.win && pendingLuck === true) {
+    const p = products.get(m.productId);
+    const code = makeCode(), name = nameOf(active), pname = p ? p.name : '경품';
+    if (p && p.stock !== '' && p.stock != null) { p.stock = Math.max(0, Number(p.stock) - 1); Net.pub(Net.T.prod + p.id, p, true); saveProducts(); }
+    log.unshift({ time: new Date().toISOString(), code, productId: p ? p.id : null, productName: pname, player: name, given: false });
+    log = log.slice(0, 300); LS.set('eight_claw_log', log); publishLog();
+    winners.unshift({ name, productName: pname }); renderWinners();
+    showBanner(`${name}님 축하합니다!`, `<em>${esc(pname)}</em> 당첨!`, '직원에게 폰 화면을 보여주세요', 3300);
+    setTimeout(() => { if (S.phase === 'won') { S.phase = 'idle'; setNow(null); } }, 3300);
+    productList = activeProducts(); refreshDollProducts(); renderLineup();
+    endTurn({ win: true, code, productName: pname, image: p ? p.image : '' });
+  } else endTurn({ win: false });
+}
+function publishLog() { Net.pub(Net.T.log, log.slice(0, 120), true); }
+function saveProducts() { LS.set('eight_claw_products', Object.fromEntries(products)); }
+function send(m) {
+  if (m.t === 'result') hostResult(m);
+  else if (m.t === 'timeout') hostDrop();
+  else if (m.t === 'state' && active) toId(active, m);
+}
+
+function onUp(m) {
+  if (!m || !m.id) return;
+  const id = String(m.id).slice(0, 40);
+  const pl = players.get(id);
+  if (m.t === 'hello' || m.t === 'ping' || m.t === 'join') {
+    const name = String(m.name || (pl && pl.name) || '').slice(0, 12);
+    players.set(id, { name, last: Date.now() });
+  }
+  switch (m.t) {
+    case 'hello': toId(id, { t: 'hello', left: playsLeft(id), active: active === id, inQueue: queue.includes(id), title: settings.title }); if (active === id) toId(id, { t: 'turn', seconds: 0, resume: true }); break;
+    case 'join':
+      if (playsLeft(id) <= 0) return toId(id, { t: 'limit' });
+      if (active !== id && !queue.includes(id)) queue.push(id);
+      nextTurn(); sendQueueInfo(); break;
+    case 'leave': queue = queue.filter(x => x !== id); sendQueueInfo(); break;
+    case 'move': if (active === id && S.phase === 'play') S.input = Math.max(-1, Math.min(1, Number(m.x) || 0)); break;
+    case 'drop': if (active === id) hostDrop(); break;
+    case 'given': if (settings.pinHash && m.ph === settings.pinHash || !settings.pinHash) { const l = log.find(x => x.code === m.code); if (l) { l.given = !!m.given; LS.set('eight_claw_log', log); publishLog(); } } break;
+    case 'resetPlays': if (settings.pinHash && m.ph === settings.pinHash || !settings.pinHash) { plays = {}; LS.set('eight_claw_plays', plays); } break;
+  }
+}
+// 연결 끊긴 폰 정리 + 하트비트
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, p] of players) if (now - p.last > 12000 && id !== active) { players.delete(id); queue = queue.filter(x => x !== id); }
+  if (active && players.has(active) && now - players.get(active).last > 6000) S.input = 0;
+  down({ t: 'hb' });
+}, 2000);
+setInterval(publishStatus, 10000);
+
+// ---------- QR 주소 ----------
+async function resolvePlayUrl() {
+  let u = (window.EIGHT && EIGHT.playUrl) || '';
+  if (!u) {
+    const local = location.protocol === 'file:' || /^(localhost|127\.)/.test(location.hostname);
+    if (local) {
+      try { const j = await (await fetch('/__lan.json')).json(); if (j.ip) u = `http://${j.ip}:${j.port}/claw/play.html`; } catch {}
+    }
+    if (!u) u = new URL('play.html', location.href).href.split('?')[0];
+  }
+  const qs = new URLSearchParams(); qs.set('room', Net.room);
+  if (new URLSearchParams(location.search).get('broker')) qs.set('broker', Net.broker);
+  playUrl = u + (u.includes('?') ? '&' : '?') + qs.toString();
+  renderQR(playUrl);
+}
+
+// ---------- 연결 ----------
+const conn = document.getElementById('conn');
+Net.connect({
+  prefix: 'tv',
+  subscribe: [Net.T.up, Net.T.settings, Net.T.prod + '+'],
+  will: { topic: Net.T.tv, payload: { online: false, ts: Date.now() } },
+  onStatus(ok) {
+    conn.textContent = ok ? '● 온라인' : '● 인터넷 연결 확인 중…'; conn.style.color = ok ? '#2FCFAE' : '#FF5C8A';
+    if (ok) { publishStatus(); publishLog(); }
+  },
+  onMessage(topic, m) {
+    if (topic === Net.T.up) return onUp(m);
+    if (topic === Net.T.settings) { if (m) { settings = Object.assign({}, DEFAULTS, m); LS.set('eight_claw_settings', settings); applyConfig(); } return; }
+    if (topic.startsWith(Net.T.prod)) {
+      const id = topic.slice(Net.T.prod.length);
+      if (m) products.set(id, m); else products.delete(id);
+      saveProducts(); clearTimeout(onMessage.t); onMessage.t = setTimeout(applyConfig, 150);
+    }
+  },
+});
+function onMessage() {}
+applyConfig(); resolvePlayUrl();
+winners.push(...log.slice(0, 3).map(l => ({ name: l.player, productName: l.productName }))); renderWinners();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
