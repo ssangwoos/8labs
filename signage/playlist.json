@@ -1,0 +1,7 @@
+{
+  "items": [
+    { "type": "image", "src": "media/01.jpg", "duration": 8 },
+    { "type": "video", "src": "media/promo.mp4", "duration": 30 },
+    { "type": "image", "src": "media/02.jpg", "duration": 8, "fit": "cover" }
+  ]
+}

@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>에이트성수 · 미디어 관리</title>
+<style>
+:root{--ink:#16181d;--sub:#6b6f78;--mut:#9a9ea6;--line:#e3e3df;--bg:#f4f4f2;--acc:#ff5a1f;--acc2:#fff1eb;--ok:#2d8a52;--okbg:#e7f6ec;--bad:#c0362c;--badbg:#fdecea}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:14px;line-height:1.5}
+header{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{margin:0;font-size:17px;font-weight:800}header h1 span{color:var(--acc)}
+.pill{font-size:12px;padding:4px 10px;border-radius:99px;background:#2a2d34;color:#c9ccd2}.pill.ok{background:#1f4d33;color:#9fe0b6}.pill.warn{background:#5a3b12;color:#ffd08a}
+header .sp{flex:1}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--ink)}.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}.btn.sm{padding:5px 10px;font-size:12px}
+.btn.dk{background:transparent;color:#fff;border-color:#3b3f48}.btn.dk:hover{border-color:#fff}.btn.dg{color:var(--bad)}
+.btn:disabled{opacity:.4;cursor:default}
+main{padding:20px 24px 60px;max-width:1500px;margin:0 auto}
+.banner{background:#fff6e0;border:1px solid #f1d58f;color:#7a5200;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.banner b{font-weight:800}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}.kpi .l{font-size:12px;color:var(--sub);font-weight:700}.kpi .v{font-size:24px;font-weight:800;margin-top:2px}.kpi .s{font-size:12px;color:var(--mut)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start}
+@media(max-width:1100px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+.card h3{margin:0 0 4px;font-size:15px}.card .hint{color:var(--sub);font-size:12px;margin:0 0 12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pl{display:flex;flex-direction:column;gap:8px}
+.it{display:grid;grid-template-columns:22px 26px 120px minmax(0,1fr) auto;gap:12px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff}
+.it.sel{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc2)}
+.it.off{opacity:.55;background:#fafaf8}.it.miss{border-color:#f0b4ae;background:var(--badbg)}
+.it.drag{opacity:.35}.it.over{border-top:3px solid var(--acc)}
+.hd{cursor:grab;color:var(--mut);font-size:18px;text-align:center;user-select:none}
+.no{font-weight:800;color:var(--sub);text-align:center}
+.th{width:120px;height:68px;border-radius:8px;background:#111;overflow:hidden;position:relative;cursor:pointer}
+.th img,.th video{width:100%;height:100%;object-fit:cover;display:block}
+.th .ty{position:absolute;left:4px;top:4px;font-size:10px;font-weight:800;color:#fff;background:rgba(0,0,0,.6);padding:1px 6px;border-radius:4px}
+.th .mx{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;text-align:center;padding:6px}
+.nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mt{font-size:12px;color:var(--sub);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bad{color:var(--bad);font-weight:700}
+.ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.dur{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.dur input{width:58px;border:0;padding:6px 6px;font:inherit;font-weight:700;text-align:right;outline:none}.dur span{padding:0 8px 0 2px;color:var(--sub);font-size:12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}.seg button{border:0;background:#fff;padding:6px 9px;font:inherit;font-size:12px;cursor:pointer;color:var(--sub)}.seg button.on{background:var(--ink);color:#fff;font-weight:700}
+.tg{width:38px;height:22px;border-radius:99px;background:#d6d6d1;position:relative;cursor:pointer;border:0;flex:none}.tg::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}.tg.on{background:var(--ok)}.tg.on::after{left:19px}
+.ib{border:1px solid var(--line);background:#fff;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:13px;display:grid;place-items:center;padding:0}.ib:hover{border-color:var(--ink)}.ib.dg:hover{border-color:var(--bad);color:var(--bad)}
+.empty{color:var(--mut);text-align:center;padding:40px 10px;border:1.5px dashed var(--line);border-radius:12px}
+.drop{border:2px dashed #ffc2a8;background:var(--acc2);border-radius:12px;padding:18px;text-align:center;color:#c2410c;font-weight:700;cursor:pointer;margin-bottom:12px}
+.drop.on{background:#ffe0d1;border-color:var(--acc)}
+.lib{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:46vh;overflow:auto}
+.lf{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.lf .th{width:100%;height:84px;border-radius:0}
+.lf .b{padding:6px 8px;display:flex;flex-direction:column;gap:4px}.lf .n{font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lf .u{font-size:11px;color:var(--mut)}.lf .used{color:var(--ok);font-weight:700}
+.pv{background:#000;border-radius:12px;aspect-ratio:16/9;overflow:hidden;position:relative;display:grid;place-items:center;color:#777;font-size:13px}
+.pv img,.pv video{width:100%;height:100%;object-fit:contain;display:block}.pv .cover{object-fit:cover}
+.pv.port{aspect-ratio:9/16;max-height:60vh;margin:0 auto}
+.tl{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:10px 0 4px;background:#eee}
+.tl div{height:100%;border-right:1px solid #fff}.tl .i{background:#7aa7ff}.tl .v{background:var(--acc)}
+.legend{font-size:11px;color:var(--sub);display:flex;gap:12px}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;opacity:0;transition:opacity .2s;z-index:50;pointer-events:none}.toast.on{opacity:1}
+.save{font-size:12px;color:#c9ccd2}
+code{background:#f1f1ee;padding:1px 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>EIGHT <span>성수</span> · 미디어 관리</h1>
+  <span class="pill" id="st">폴더 미연결</span>
+  <span class="save" id="sv"></span>
+  <span class="sp"></span>
+  <button class="btn dk" id="bPreview">▶ 플레이어 열기</button>
+  <button class="btn dk" id="bReload">새로 읽기</button>
+  <button class="btn pri" id="bConnect">디지털사이니지 폴더 연결</button>
+</header>
+<main id="app"></main>
+<div class="toast" id="toast"></div>
+<script>
+(() => {
+'use strict';
+const PLAYER = '에이트성수_미디어플레이어.html';
+const VIDEO_RE = /\.(mp4|webm|mov|m4v)$/i, IMG_RE = /\.(jpe?g|png|gif|webp|avif)$/i;
+const S = { dir: null, media: null, files: new Map(), items: [], hidden: [], sel: null, saving: null, dirty: false, port: false, err: '' };
+const urls = new Map();   // name -> objectURL
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 2200); };
+const fmt = s => { s = Math.round(+s || 0); const m = Math.floor(s / 60), r = s % 60; return m ? `${m}분 ${r ? r + '초' : ''}`.trim() : `${r}초`; };
+const clock = s => { s = Math.round(+s || 0); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+const isVideo = it => it.type === 'video' || VIDEO_RE.test(it.src);
+const nameOf = src => String(src || '').replace(/^media\//, '');
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+/* ---------- IndexedDB: 폴더 핸들 기억 ---------- */
+const idb = (mode, fn) => new Promise((res, rej) => { const r = indexedDB.open('eightSignage', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { try { const t = r.result.transaction('kv', mode); const st = t.objectStore('kv'); const q = fn(st); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error) } catch (e) { rej(e) } }; r.onerror = () => rej(r.error) });
+const saveHandle = h => idb('readwrite', st => st.put(h, 'dir'));
+const loadHandle = () => idb('readonly', st => st.get('dir'));
+
+async function connect(h, ask) {
+  try {
+    if (!h) { h = await window.showDirectoryPicker({ id: 'eightSignage', mode: 'readwrite' }); }
+    let p = await h.queryPermission({ mode: 'readwrite' });
+    if (p !== 'granted' && ask) p = await h.requestPermission({ mode: 'readwrite' });
+    if (p !== 'granted') { S.dir = h; S.err = 'need'; render(); return; }
+    // playlist.js 가 있는 폴더인지 확인
+    let ok = false; try { await h.getFileHandle('playlist.js'); ok = true } catch (e) {}
+    if (!ok) { try { await h.getFileHandle(PLAYER); ok = true } catch (e) {} }
+    if (!ok) { toast('디지털사이니지 폴더(playlist.js 있는 폴더)를 골라 주세요'); return; }
+    S.dir = h; S.err = ''; try { await saveHandle(h) } catch (e) {}
+    S.media = await h.getDirectoryHandle('media', { create: true });
+    await readAll(); toast('폴더 연결됨');
+  } catch (e) { if (e && e.name !== 'AbortError') { console.warn(e); toast('폴더를 열지 못했어요') } }
+}
+
+async function readAll() {
+  // media 폴더 파일 목록
+  urls.forEach(u => URL.revokeObjectURL(u)); urls.clear(); S.files.clear();
+  for await (const [n, fh] of S.media.entries()) {
+    if (fh.kind !== 'file' || !(VIDEO_RE.test(n) || IMG_RE.test(n))) continue;
+    const f = await fh.getFile(); S.files.set(n, { name: n, size: f.size, mod: f.lastModified, video: VIDEO_RE.test(n), file: f });
+    urls.set(n, URL.createObjectURL(f));
+  }
+  // playlist.js 읽기
+  S.items = []; S.hidden = [];
+  try {
+    const t = await (await (await S.dir.getFileHandle('playlist.js')).getFile()).text();
+    const w = {}; new Function('window', t)(w);
+    const P = w.PLAYLIST || {};
+    const L = Array.isArray(P) ? P : (P.items || []);
+    S.items = L.map(x => ({ ...x, _id: uid(), on: true }));
+    (Array.isArray(P.hidden) ? P.hidden : []).forEach(x => S.items.push({ ...x, _id: uid(), on: false }));
+    if (Array.isArray(P.order)) { const ord = P.order; S.items.sort((a, b) => ord.indexOf(a.src) - ord.indexOf(b.src)) }
+  } catch (e) { console.warn('playlist', e) }
+  S.dirty = false; S.sel = S.items[0] ? S.items[0]._id : null; render();
+}
+
+/* ---------- 저장: playlist.js 를 다시 씀 ---------- */
+function pack() {
+  const clean = it => { const o = { type: isVideo(it) ? 'video' : 'image', src: it.src, duration: Math.max(1, Math.round(+it.duration || 1)) }; if (it.fit === 'cover') o.fit = 'cover'; if (it.title) o.title = it.title; return o };
+  const on = S.items.filter(x => x.on).map(clean), off = S.items.filter(x => !x.on).map(clean);
+  const order = S.items.map(x => x.src);
+  const line = o => '    ' + JSON.stringify(o);
+  return `// 재생 목록 — 위에서부터 순서대로 반복 재생합니다.
+// 이 파일은 "에이트성수_미디어관리.html" 에서 자동으로 저장됩니다. (마지막 저장 ${new Date().toLocaleString('ko-KR')})
+// type: "image" 또는 "video" / src: 파일 경로 / duration: 표시 시간(초)
+// "fit": "cover" 를 넣으면 여백 없이 화면을 꽉 채웁니다.
+// hidden 에 있는 항목은 재생하지 않습니다 (관리 화면에서 꺼 둔 항목).
+window.PLAYLIST = {
+  items: [
+${on.map(line).join(',\n')}
+  ],
+  hidden: [
+${off.map(line).join(',\n')}
+  ],
+  order: ${JSON.stringify(order)}
+};
+`;
+}
+function touch() { S.dirty = true; render(); clearTimeout(S.saving); S.saving = setTimeout(save, 700) }
+async function save() {
+  if (!S.dir) return;
+  try {
+    const fh = await S.dir.getFileHandle('playlist.js', { create: true }); const w = await fh.createWritable(); await w.write(pack()); await w.close();
+    const jh = await S.dir.getFileHandle('playlist.json', { create: true }); const w2 = await jh.createWritable();
+    await w2.write(JSON.stringify({ items: S.items.filter(x => x.on).map(x => ({ type: isVideo(x) ? 'video' : 'image', src: x.src, duration: Math.round(+x.duration || 1), ...(x.fit === 'cover' ? { fit: 'cover' } : {}) })) }, null, 2)); await w2.close();
+    S.dirty = false; S.savedAt = new Date(); paintSave();
+  } catch (e) { console.warn(e); toast('저장하지 못했어요 — 폴더 권한을 확인하세요'); }
+}
+function paintSave() { const el = $('sv'); if (!el) return; el.textContent = S.dirty ? '저장 중…' : S.savedAt ? '저장됨 ' + S.savedAt.toLocaleTimeString('ko-KR') + ' · TV는 30초 안에 반영' : ''; }
+
+/* ---------- 파일 추가 ---------- */
+function videoLen(url) { return new Promise(res => { const v = document.createElement('video'); v.preload = 'metadata'; v.muted = true; v.src = url; v.onloadedmetadata = () => res(Math.ceil(v.duration || 0)); v.onerror = () => res(0); setTimeout(() => res(0), 8000) }) }
+async function addFiles(list) {
+  if (!S.media) { toast('먼저 폴더를 연결하세요'); return; }
+  let n = 0;
+  for (const f of list) {
+    if (!(VIDEO_RE.test(f.name) || IMG_RE.test(f.name))) { toast(f.name + ' — 사진·영상 파일만 넣을 수 있어요'); continue; }
+    let name = f.name.replace(/[\\/:*?"<>|#%]/g, '_'), k = 1;
+    while (S.files.has(name)) { const m = f.name.match(/^(.*?)(\.[^.]+)$/); name = `${m ? m[1] : f.name}_${++k}${m ? m[2] : ''}`; }
+    const fh = await S.media.getFileHandle(name, { create: true }); const w = await fh.createWritable(); await w.write(f); await w.close();
+    const nf = await fh.getFile(); S.files.set(name, { name, size: nf.size, mod: nf.lastModified, video: VIDEO_RE.test(name), file: nf }); urls.set(name, URL.createObjectURL(nf));
+    await addToList(name); n++;
+  }
+  if (n) { toast(n + '개 파일을 media 폴더에 넣고 재생 목록 끝에 추가했어요'); touch(); }
+}
+async function addToList(name) {
+  const F = S.files.get(name); if (!F) return;
+  const it = { _id: uid(), type: F.video ? 'video' : 'image', src: 'media/' + name, duration: 8, on: true };
+  if (F.video) { const d = await videoLen(urls.get(name)); if (d) it.duration = d; }
+  S.items.push(it); S.sel = it._id;
+}
+
+/* ---------- 화면 ---------- */
+function thumb(it, big) {
+  const n = nameOf(it.src), u = urls.get(n), v = isVideo(it);
+  if (!u) return `<div class="mx">파일 없음</div>`;
+  return (v ? `<video src="${u}#t=0.5" muted preload="metadata"${big ? ' controls autoplay loop' : ''}${it.fit === 'cover' ? ' class="cover"' : ''}></video>` : `<img src="${u}" alt=""${it.fit === 'cover' ? ' class="cover"' : ''}>`) + (big ? '' : `<span class="ty">${v ? '영상' : '사진'}</span>`);
+}
+function render() {
+  const app = $('app');
+  const st = $('st');
+  if (!S.dir || S.err) {
+    st.className = 'pill' + (S.err ? ' warn' : ''); st.textContent = S.err ? '권한 필요' : '폴더 미연결';
+    $('bConnect').textContent = S.err ? '폴더 권한 허용' : '디지털사이니지 폴더 연결';
+    app.innerHTML = `<div class="banner"><span>${S.err ? '<b>폴더 접근 권한을 다시 허용해 주세요.</b> 브라우저를 다시 열면 한 번씩 물어봐요.' : '<b>디지털사이니지 폴더를 연결하세요.</b> <code>playlist.js</code>와 <code>media</code> 폴더가 있는 폴더예요. 한 번 연결하면 다음부터 기억해요.'}</span><span style="flex:1"></span><button class="btn pri" data-a="connect">${S.err ? '권한 허용' : '폴더 연결'}</button></div>
+      ${'showDirectoryPicker' in window ? '' : '<div class="banner" style="background:#fdecea;border-color:#f0b4ae;color:#8a1f16">이 브라우저는 폴더 연결을 지원하지 않아요. <b>크롬</b> 또는 <b>엣지</b>로 열어 주세요.</div>'}`;
+    return;
+  }
+  st.className = 'pill ok'; st.textContent = '연결됨 · ' + S.dir.name; $('bConnect').textContent = '다른 폴더';
+  const on = S.items.filter(x => x.on), total = on.reduce((a, x) => a + (+x.duration || 0), 0);
+  const miss = S.items.filter(x => !S.files.has(nameOf(x.src)));
+  const used = new Set(S.items.map(x => nameOf(x.src)));
+  const unused = [...S.files.values()].filter(f => !used.has(f.name));
+  const sel = S.items.find(x => x._id === S.sel);
+  let acc = 0; const starts = {}; on.forEach(x => { starts[x._id] = acc; acc += +x.duration || 0 });
+  app.innerHTML = `
+  <div class="kpis">
+    <div class="kpi"><div class="l">재생 중인 콘텐츠</div><div class="v">${on.length}개</div><div class="s">사진 ${on.filter(x => !isVideo(x)).length} · 영상 ${on.filter(isVideo).length}</div></div>
+    <div class="kpi"><div class="l">한 바퀴 길이</div><div class="v">${fmt(total)}</div><div class="s">${total ? '하루 약 ' + Math.floor(86400 / total).toLocaleString() + '바퀴' : '-'}</div></div>
+    <div class="kpi"><div class="l">꺼 둔 콘텐츠</div><div class="v">${S.items.length - on.length}개</div><div class="s">목록엔 남고 재생은 안 함</div></div>
+    <div class="kpi"><div class="l">media 폴더</div><div class="v">${S.files.size}개</div><div class="s">${miss.length ? `<span class="bad">파일 없는 항목 ${miss.length}개</span>` : unused.length ? '목록에 없는 파일 ' + unused.length + '개' : '모두 목록에 있음'}</div></div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><div><h3>재생 목록</h3><p class="hint">위에서부터 순서대로 반복돼요. ☰를 끌어서 순서를 바꾸고, 시간·화면 맞춤·켜기/끄기를 바꾸면 바로 저장돼요. 모든 TV가 같은 순간에 같은 장면을 틀어요.</p></div></div>
+      ${on.length ? `<div class="tl">${on.map(x => `<div class="${isVideo(x) ? 'v' : 'i'}" style="width:${(+x.duration || 0) / total * 100}%" title="${esc(nameOf(x.src))} · ${x.duration}초"></div>`).join('')}</div><div class="legend" style="margin-bottom:12px"><span><i style="background:#7aa7ff"></i>사진</span><span><i style="background:var(--acc)"></i>영상</span><span>0:00 → ${clock(total)} 반복</span></div>` : ''}
+      <div class="pl" id="pl">${S.items.map((it, i) => {
+        const n = nameOf(it.src), F = S.files.get(n), v = isVideo(it);
+        return `<div class="it ${it._id === S.sel ? 'sel' : ''} ${it.on ? '' : 'off'} ${F ? '' : 'miss'}" data-id="${it._id}">
+          <div class="hd" draggable="true" title="끌어서 순서 바꾸기">☰</div>
+          <div class="no">${it.on ? on.indexOf(it) + 1 : '–'}</div>
+          <div class="th" data-a="sel">${thumb(it)}</div>
+          <div style="min-width:0" data-a="sel"><div class="nm">${esc(n)}</div>
+            <div class="mt">${F ? '' : '<span class="bad">media 폴더에 파일이 없어요</span>'}${it.on ? `<span>${clock(starts[it._id])} ~ ${clock(starts[it._id] + (+it.duration || 0))}</span>` : '<span>꺼짐 · 재생 안 함</span>'}${F ? `<span>${(F.size / 1048576).toFixed(1)}MB</span>` : ''}</div></div>
+          <div class="ctl">
+            <div class="dur" title="화면에 보여줄 시간"><input type="number" min="1" max="3600" data-k="duration" value="${esc(it.duration)}"><span>초</span></div>
+            ${v && F ? `<button class="btn sm" data-a="fitLen" title="영상 실제 길이로 맞추기">영상 길이</button>` : ''}
+            <div class="seg" title="화면 맞춤"><button class="${it.fit === 'cover' ? '' : 'on'}" data-a="fit" data-v="">맞춤</button><button class="${it.fit === 'cover' ? 'on' : ''}" data-a="fit" data-v="cover">꽉 채움</button></div>
+            <button class="tg ${it.on ? 'on' : ''}" data-a="tog" title="${it.on ? '끄기' : '켜기'}"></button>
+            <button class="ib" data-a="up" ${i ? '' : 'disabled'} title="위로">↑</button><button class="ib" data-a="down" ${i < S.items.length - 1 ? '' : 'disabled'} title="아래로">↓</button>
+            <button class="ib dg" data-a="rm" title="목록에서 빼기 (파일은 남음)">✕</button>
+          </div></div>`;
+      }).join('') || '<div class="empty">재생 목록이 비어 있어요. 오른쪽에서 파일을 끌어다 놓거나 목록에 추가하세요.</div>'}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card"><div class="row" style="justify-content:space-between"><h3>미리보기</h3><div class="seg"><button class="${S.port ? '' : 'on'}" data-a="ori" data-v="0">가로 TV</button><button class="${S.port ? 'on' : ''}" data-a="ori" data-v="1">세로 TV</button></div></div>
+        <p class="hint">${sel ? esc(nameOf(sel.src)) + ' · ' + (sel.fit === 'cover' ? '꽉 채움' : '맞춤(여백 있음)') : '재생 목록에서 항목을 누르세요'}</p>
+        <div class="pv ${S.port ? 'port' : ''}">${sel ? thumb(sel, true) : '선택한 항목 없음'}</div>
+        <div class="row" style="margin-top:10px"><button class="btn sm" data-a="player">▶ 전체 순서대로 재생 (플레이어)</button></div></div>
+      <div class="card"><h3>media 폴더</h3><p class="hint">사진·영상을 여기에 끌어다 놓으면 media 폴더에 복사되고 재생 목록 끝에 붙어요.</p>
+        <div class="drop" id="drop" data-a="pick">⬆ 파일 끌어다 놓기 · 눌러서 고르기</div>
+        <div class="lib">${[...S.files.values()].sort((a, b) => b.mod - a.mod).map(f => `<div class="lf"><div class="th" data-a="libSel" data-n="${esc(f.name)}">${thumb({ src: 'media/' + f.name, type: f.video ? 'video' : 'image' })}</div><div class="b"><div class="n" title="${esc(f.name)}">${esc(f.name)}</div><div class="u">${(f.size / 1048576).toFixed(1)}MB · ${used.has(f.name) ? '<span class="used">목록에 있음</span>' : '목록에 없음'}</div>
+          <div class="row">${used.has(f.name) ? '' : `<button class="btn sm" data-a="libAdd" data-n="${esc(f.name)}">+ 목록에</button>`}<button class="btn sm dg" data-a="libDel" data-n="${esc(f.name)}">파일 삭제</button></div></div></div>`).join('') || '<div class="empty" style="grid-column:1/-1">media 폴더가 비어 있어요</div>'}</div></div>
+    </div>
+  </div>`;
+  paintSave(); bindDrag();
+}
+
+/* ---------- 순서 끌기 ---------- */
+function bindDrag() {
+  let from = null;
+  document.querySelectorAll('#pl .it').forEach(row => {
+    const h = row.querySelector('.hd');
+    h.addEventListener('dragstart', e => { from = row.dataset.id; row.classList.add('drag'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', from) });
+    h.addEventListener('dragend', () => { row.classList.remove('drag'); document.querySelectorAll('.it.over').forEach(x => x.classList.remove('over')) });
+    row.addEventListener('dragover', e => { if (!from) return; e.preventDefault(); document.querySelectorAll('.it.over').forEach(x => x.classList.remove('over')); row.classList.add('over') });
+    row.addEventListener('drop', e => { if (!from) return; e.preventDefault(); const a = S.items.findIndex(x => x._id === from), b = S.items.findIndex(x => x._id === row.dataset.id); if (a < 0 || b < 0 || a === b) return; const [m] = S.items.splice(a, 1); S.items.splice(b, 0, m); from = null; touch() });
+  });
+  const d = $('drop'); if (!d) return;
+  ['dragenter', 'dragover'].forEach(ev => d.addEventListener(ev, e => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); d.classList.add('on') } }));
+  ['dragleave', 'drop'].forEach(ev => d.addEventListener(ev, () => d.classList.remove('on')));
+  d.addEventListener('drop', e => { e.preventDefault(); addFiles([...e.dataTransfer.files]) });
+}
+// 페이지 어디에 놓아도 파일 추가
+document.addEventListener('dragover', e => { if (e.dataTransfer && e.dataTransfer.types.includes('Files')) e.preventDefault() });
+document.addEventListener('drop', e => { if (e.target.closest && e.target.closest('#drop')) return; if (e.dataTransfer && e.dataTransfer.files.length) { e.preventDefault(); addFiles([...e.dataTransfer.files]) } });
+
+/* ---------- 클릭 / 입력 ---------- */
+document.addEventListener('click', async e => {
+  const t = e.target.closest('[data-a]'); if (!t) return;
+  const a = t.dataset.a, row = t.closest('.it'), it = row && S.items.find(x => x._id === row.dataset.id);
+  if (a === 'connect') return S.dir && S.err ? connect(S.dir, true) : connect(null, true);
+  if (a === 'sel' && it) { S.sel = it._id; render(); return }
+  if (a === 'tog' && it) { it.on = !it.on; touch(); return }
+  if (a === 'fit' && it) { it.fit = t.dataset.v || undefined; S.sel = it._id; touch(); return }
+  if (a === 'up' && it) { const i = S.items.indexOf(it); if (i > 0) { S.items.splice(i, 1); S.items.splice(i - 1, 0, it); touch() } return }
+  if (a === 'down' && it) { const i = S.items.indexOf(it); if (i < S.items.length - 1) { S.items.splice(i, 1); S.items.splice(i + 1, 0, it); touch() } return }
+  if (a === 'rm' && it) { S.items = S.items.filter(x => x !== it); if (S.sel === it._id) S.sel = null; touch(); toast('목록에서 뺐어요 (media 폴더의 파일은 그대로)'); return }
+  if (a === 'fitLen' && it) { const d = await videoLen(urls.get(nameOf(it.src))); if (d) { it.duration = d; touch(); toast('영상 길이 ' + d + '초로 맞췄어요') } else toast('영상 길이를 읽지 못했어요'); return }
+  if (a === 'ori') { S.port = t.dataset.v === '1'; render(); return }
+  if (a === 'player') { window.open(PLAYER, '_blank'); return }
+  if (a === 'pick') { const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true; inp.accept = 'image/*,video/*'; inp.onchange = () => addFiles([...inp.files]); inp.click(); return }
+  if (a === 'libAdd') { await addToList(t.dataset.n); touch(); toast('재생 목록 끝에 추가했어요'); return }
+  if (a === 'libSel') { const x = S.items.find(i => nameOf(i.src) === t.dataset.n); if (x) { S.sel = x._id; render() } return }
+  if (a === 'libDel') {
+    const n = t.dataset.n, inList = S.items.some(x => nameOf(x.src) === n);
+    if (!confirm(`media 폴더에서 "${n}" 파일을 삭제할까요?${inList ? '\n재생 목록에서도 빠져요.' : ''}\n삭제하면 되돌릴 수 없어요.`)) return;
+    try { await S.media.removeEntry(n); S.files.delete(n); const u = urls.get(n); if (u) URL.revokeObjectURL(u); urls.delete(n); S.items = S.items.filter(x => nameOf(x.src) !== n); touch(); toast('파일을 삭제했어요') }
+    catch (err) { toast('삭제하지 못했어요') }
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target; if (el.dataset.k !== 'duration') return;
+  const row = el.closest('.it'), it = row && S.items.find(x => x._id === row.dataset.id); if (!it) return;
+  it.duration = Math.max(1, Math.min(3600, Math.round(+el.value || 1))); touch();
+});
+$('bConnect').onclick = () => S.dir && S.err ? connect(S.dir, true) : connect(null, true);
+$('bReload').onclick = () => { if (S.dir && !S.err) readAll().then(() => toast('폴더를 다시 읽었어요')) };
+$('bPreview').onclick = () => window.open(PLAYER, '_blank');
+
+(async () => { render(); try { const h = await loadHandle(); if (h) await connect(h, false) } catch (e) {} })();
+})();
+</script>
+</body>
+</html>
