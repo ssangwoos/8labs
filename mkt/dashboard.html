@@ -12,8 +12,8 @@
   --ink:#15100F; --ink-2:#4B4241; --ink-3:#807472; --ink-4:#A99E9C;
   --line:#E4DDDB; --line-2:#F0EAE9;
   --brand:#C0202E;
-  --s0:#E2DCD9; --s1:#E9B9BD; --s2:#C25A67; --s3:#8E141F;
-  --on0:#6E635F; --on1:#7A1019; --on2:#FFFFFF; --on3:#FFFFFF;
+  --s0:#E2DCD9; --s1:#E9B9BD; --s2:#C25A67; --s3:#8E141F; --sx:#CFC8C4;
+  --on0:#6E635F; --on1:#7A1019; --on2:#FFFFFF; --on3:#FFFFFF; --onx:#6E635F;
   --warn:#8A6100; --warn-bg:#FBF0D8;
   --good:#17703F;
   --shadow:0 1px 2px rgba(21,16,15,.05), 0 10px 30px -22px rgba(21,16,15,.4);
@@ -24,8 +24,8 @@
   --ink:#F3EDEB; --ink-2:#C6BAB7; --ink-3:#8F8280; --ink-4:#6B605E;
   --line:#332B2A; --line-2:#262020;
   --brand:#F0757C;
-  --s0:#3A3233; --s1:#6E2A32; --s2:#C4535F; --s3:#F6B3B9;
-  --on0:#A79A97; --on1:#F0A5AC; --on2:#FFFFFF; --on3:#3A1215;
+  --s0:#3A3233; --s1:#6E2A32; --s2:#C4535F; --s3:#F6B3B9; --sx:#2B2525;
+  --on0:#A79A97; --on1:#F0A5AC; --on2:#FFFFFF; --on3:#3A1215; --onx:#8A7E7B;
   --warn:#E4B45C; --warn-bg:#332916;
   --good:#63C48D;
   --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 30px -22px rgba(0,0,0,.9);
@@ -36,8 +36,8 @@
   --ink:#F3EDEB; --ink-2:#C6BAB7; --ink-3:#8F8280; --ink-4:#6B605E;
   --line:#332B2A; --line-2:#262020;
   --brand:#F0757C;
-  --s0:#3A3233; --s1:#6E2A32; --s2:#C4535F; --s3:#F6B3B9;
-  --on0:#A79A97; --on1:#F0A5AC; --on2:#FFFFFF; --on3:#3A1215;
+  --s0:#3A3233; --s1:#6E2A32; --s2:#C4535F; --s3:#F6B3B9; --sx:#2B2525;
+  --on0:#A79A97; --on1:#F0A5AC; --on2:#FFFFFF; --on3:#3A1215; --onx:#8A7E7B;
   --warn:#E4B45C; --warn-bg:#332916;
   --good:#63C48D;
   --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 30px -22px rgba(0,0,0,.9);
@@ -130,6 +130,11 @@ thead th .arw{opacity:.35;margin-left:5px}
 thead th[aria-sort] .arw{opacity:1;color:var(--brand)}
 tbody tr:hover{background:var(--surface-2)}
 tbody tr:last-child td{border-bottom:0}
+tbody tr.canc{opacity:.5}
+tbody tr.canc:hover{opacity:1}
+tbody tr.canc .handle{text-decoration:line-through}
+tbody tr.sep td{background:var(--surface-2);padding:9px 14px;font-family:'IBM Plex Mono';
+  font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4)}
 td.r{text-align:right}
 .rd{display:inline-block;font-family:'IBM Plex Mono';font-size:11.5px;font-weight:600;color:var(--ink-2);background:var(--surface-3);border-radius:4px;padding:4px 9px;white-space:nowrap}
 .handle{font-weight:600;font-size:14.5px}
@@ -303,9 +308,9 @@ const FIREBASE_CONFIG = {
 let META = { title:'', brand:'', campaign:'', period:'', platform:'', manager:'Eight Labs' };
 let CONFIG = {
   kpis:{creators:true,visited:true,published:true,views:true,avg:true},
-  cols:{round:true,handle:true,name:true,followers:true,platform:true,status:true,
+  cols:{round:true,handle:true,name:true,country:true,followers:true,platform:true,status:true,
         visit:true,visitTime:true,post:true,views:true,url:true},
-  pipeline:true, rounds:true, dates:true
+  pipeline:true, rounds:true, dates:true, cancelled:false
 };
 let ROWS = [];
 let PKG = null;
@@ -317,6 +322,20 @@ const STAGES = [
   {key:'published', label:'업로드 완료', color:'var(--s3)', ink:'var(--on3)'},
 ];
 const STAGE = Object.fromEntries(STAGES.map(s=>[s.key,s]));
+STAGE.cancelled = {key:'cancelled', label:'취소', color:'var(--sx)', ink:'var(--onx)'};
+
+/* 국가 코드 → 국기 + 한국어 표기 */
+const COUNTRY = {
+KR:'\u{1F1F0}\u{1F1F7} 한국', JP:'\u{1F1EF}\u{1F1F5} 일본', CN:'\u{1F1E8}\u{1F1F3} 중국', TW:'\u{1F1F9}\u{1F1FC} 대만',
+HK:'\u{1F1ED}\u{1F1F0} 홍콩', SG:'\u{1F1F8}\u{1F1EC} 싱가포르', MY:'\u{1F1F2}\u{1F1FE} 말레이시아', TH:'\u{1F1F9}\u{1F1ED} 태국',
+VN:'\u{1F1FB}\u{1F1F3} 베트남', ID:'\u{1F1EE}\u{1F1E9} 인도네시아', PH:'\u{1F1F5}\u{1F1ED} 필리핀', IN:'\u{1F1EE}\u{1F1F3} 인도',
+US:'\u{1F1FA}\u{1F1F8} 미국', CA:'\u{1F1E8}\u{1F1E6} 캐나다', MX:'\u{1F1F2}\u{1F1FD} 멕시코', BR:'\u{1F1E7}\u{1F1F7} 브라질',
+GB:'\u{1F1EC}\u{1F1E7} 영국', FR:'\u{1F1EB}\u{1F1F7} 프랑스', DE:'\u{1F1E9}\u{1F1EA} 독일', IT:'\u{1F1EE}\u{1F1F9} 이탈리아',
+ES:'\u{1F1EA}\u{1F1F8} 스페인', NL:'\u{1F1F3}\u{1F1F1} 네덜란드', PL:'\u{1F1F5}\u{1F1F1} 폴란드', RU:'\u{1F1F7}\u{1F1FA} 러시아',
+UA:'\u{1F1FA}\u{1F1E6} 우크라이나', TR:'\u{1F1F9}\u{1F1F7} 튀르키예', AE:'\u{1F1E6}\u{1F1EA} UAE', SA:'\u{1F1F8}\u{1F1E6} 사우디',
+EG:'\u{1F1EA}\u{1F1EC} 이집트', ZA:'\u{1F1FF}\u{1F1E6} 남아공', AU:'\u{1F1E6}\u{1F1FA} 호주', NZ:'\u{1F1F3}\u{1F1FF} 뉴질랜드',
+KZ:'\u{1F1F0}\u{1F1FF} 카자흐스탄', UZ:'\u{1F1FA}\u{1F1FF} 우즈베키스탄', MN:'\u{1F1F2}\u{1F1F3} 몽골'
+};
 
 const fmt = n => n>=1e6 ? (n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M'
               : n>=1e3 ? Math.round(n/100)/10+'K' : String(n);
@@ -407,6 +426,7 @@ async function loadClient(user){
         round: Number(v.round) || 1,
         handle: v.handle || '',
         name: v.name || '',
+        country: v.country || '',
         masked: v.masked === true || !String(v.handle || '').startsWith('@'),
         followers: v.followers ?? null,
         platform: v.platform || 'Instagram',
@@ -471,6 +491,7 @@ const COLS = [
   {k:'round',     lb:'회차'},
   {k:'handle',    lb:'크리에이터'},
   {k:'name',      lb:'이름'},
+  {k:'country',   lb:'국가'},
   {k:'followers', lb:'팔로워', r:true, sort:true},
   {k:'platform',  lb:'플랫폼'},
   {k:'status',    lb:'상태'},
@@ -571,7 +592,10 @@ function inScope(r){
 }
 
 function render(){
-  const scoped = ROWS.filter(inScope);
+  const inView = ROWS.filter(inScope);
+  /* 취소된 크리에이터는 집계·파이프라인에서 빼고 표 하단에 따로 둡니다 */
+  const dead   = inView.filter(r => r.status === 'cancelled');
+  const scoped = inView.filter(r => r.status !== 'cancelled');
   ROWS.forEach(r=>{ if(r.masked===undefined) r.masked = !String(r.handle||'').startsWith('@'); });
   const rows = scoped
     .filter(r=> status==='all' || r.status===status)
@@ -653,6 +677,7 @@ function render(){
       case 'round': return `<td><span class="rd">${r.round}차</span></td>`;
       case 'handle': return `<td><span class="handle${r.masked?' masked':''}">${r.handle}</span></td>`;
       case 'name': return `<td>${(r.name && !r.masked) ? esc(r.name) : '<span class="dash">—</span>'}</td>`;
+      case 'country': return `<td>${r.country && COUNTRY[r.country] ? COUNTRY[r.country] : '<span class="dash">—</span>'}</td>`;
       case 'followers': return `<td class="r">${r.followers?`<span class="num">${fmt(r.followers)}</span>`:'<span class="dash">—</span>'}</td>`;
       case 'platform': return `<td><span class="plat">${r.platform}</span></td>`;
       case 'status': return `<td><span class="st"><span class="i" style="background:${s2.color}"></span>${s2.label}</span></td>`;
@@ -668,9 +693,14 @@ function render(){
     return '<td></td>';
   };
 
-  document.getElementById('tbody').innerHTML = rows.length
+  const mainHtml = rows.length
     ? rows.map(r=>'<tr>'+cols.map(c=>cell(r,c.k)).join('')+'</tr>').join('')
     : `<tr><td colspan="${cols.length}" class="empty">선택한 조건에 해당하는 크리에이터가 없습니다.</td></tr>`;
+  const deadHtml = (CONFIG.cancelled === true && dead.length)
+    ? `<tr class="sep"><td colspan="${cols.length}">취소 · ${dead.length}명</td></tr>`
+      + dead.map(r=>'<tr class="canc">'+cols.map(c=>cell(r,c.k)).join('')+'</tr>').join('')
+    : '';
+  document.getElementById('tbody').innerHTML = mainHtml + deadHtml;
 
   document.getElementById('count').textContent = `${rows.length}명 표시 · ${scopeName} ${scoped.length}명`;
 }
