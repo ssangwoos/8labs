@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>푸드트럭 신청 관리 · 에이트성수</title>
+<style>
+:root{--ink:#17171b;--sub:#6d6d76;--line:#e2e1dc;--bg:#f4f3f0;--card:#fff;--acc:#ff5a1f;--accd:#c93d08}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;font-size:14px;line-height:1.5;word-break:keep-all}
+header{background:var(--ink);color:#fff;padding:12px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:10}
+header h1{margin:0;font-size:16px;flex:1;min-width:180px}
+header h1 span{color:var(--acc)}
+#sync{font-size:12px;color:#b9b9c0}
+main{max-width:1280px;margin:0 auto;padding:18px 14px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi .l{color:var(--sub);font-size:12px;font-weight:600}.kpi .v{font-size:25px;font-weight:800;letter-spacing:-.5px}.kpi .s{font-size:12px;color:var(--sub)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.muted{color:var(--sub);font-size:12px}
+button,select,input,textarea{font:inherit}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;font-weight:700;font-size:13px;cursor:pointer;color:var(--ink);text-decoration:none;display:inline-block}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}.btn.sm{padding:4px 10px;font-size:12px}.btn.danger{color:#c0362c}
+.btn.dark{background:transparent;border-color:#4a4a52;color:#fff}
+input[type=text],input[type=password],textarea,select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;color:var(--ink)}
+.tw{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:980px}
+th{font-size:12px;color:var(--sub);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:#faf9f7}
+td{padding:10px 12px;border-bottom:1px solid #efeeea;vertical-align:top}
+tr.click{cursor:pointer}tr.click:hover{background:#fffaf7}tr.new{background:#fff8e8}
+.flag{display:inline-block;margin:1px 3px 1px 0;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:700;background:#ffe9e3;color:#c0362c}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800}
+#mbg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,12,16,.45);display:none;align-items:flex-start;justify-content:center;z-index:50;overflow:auto;padding:30px 12px}
+#mbg.on{display:flex}
+#modal{background:#fff;border-radius:14px;width:min(900px,100%);padding:22px}
+#modal h2{margin:0 0 12px;font-size:18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sec{font-size:12px;font-weight:800;margin:16px 0 8px;padding-top:12px;border-top:1px dashed var(--line)}
+.fg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;min-width:0}.w2{grid-column:span 2}.w4{grid-column:span 4}
+.vr{display:flex;gap:10px;padding:5px 0;border-top:1px solid #f1f0ec;font-size:13px}.vr span:first-child{flex:0 0 150px;color:var(--sub);font-size:12px}.vr span:last-child{flex:1;white-space:pre-wrap}
+.cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:4px 16px}
+.cg label{display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer;padding:4px 0}
+.mfoot{display:flex;gap:8px;margin-top:16px;align-items:center}.mfoot .sp{flex:1}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;display:none;z-index:99}
+#login{max-width:380px;margin:80px auto;text-align:center}
+@media(max-width:700px){.fg{grid-template-columns:1fr 1fr}.w4,.w2{grid-column:span 2}.vr span:first-child{flex-basis:110px}}
+</style>
+<script src="config.js"></script>
+</head>
+<body>
+<header><h1>EIGHT <span>SEONGSU</span> · 푸드트럭 신청 관리</h1><span id="sync"></span><button class="btn sm dark" id="reload" style="display:none">새로고침</button><button class="btn sm dark" id="logout" style="display:none">로그아웃</button></header>
+<main id="main"></main>
+<div id="mbg"><div id="modal"></div></div>
+<div id="toast"></div>
+<script>
+(function(){
+  var CFG=window.FT_FIREBASE||{},SEENK='ft-admin-seen',FT_MAX=5,FB=null,unsub=null,me=null;
+  var FST=['접수','확인','제안','확정','거절'];
+  var FDOCS=['사업자등록증 사본','영업신고 관련 서류','차량 사진 (전면·측면·내부)','판매 메뉴 및 가격표','전기장비 사양·소비전력 자료','급수·오수탱크 용량 및 처리 계획','LPG·발전기 안전서류 (해당 업체)','보험 가입증명서 (가입 업체)'];
+  var FREV=[['전기','220V 공급 가능 용량 이내'],['급수','자체 청수탱크 보유'],['오수','자체 오수탱크 및 적법한 처리 계획'],['발전기','소음·배기가스·안전성 확인'],['조리','화기 및 가스 안전성 확인'],['영업','해당 장소에서 적법한 영업 가능'],['공간','차량 5대 배치 및 보행 동선 확보']];
+  var L=[],q='',fst='',openId='',seen={};
+  try{seen=JSON.parse(localStorage.getItem(SEENK)||'{}')||{}}catch(e){}
+  var $=function(id){return document.getElementById(id)};
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function toast(t){var el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(function(){el.style.display='none'},2400)}
+  function eqSum(f){return (f.equip||[]).reduce(function(a,e){return a+(e.sim==='아니오'?0:(+e.w||0)*(+e.qty||1))},0)}
+  function W(f){return +f.maxW||eqSum(f)||0}
+  function flags(f){var F=[];if(f.waste==='아니오')F.push('오수탱크 없음');if(f.tank==='아니오')F.push('청수탱크 없음');if(f.ext==='아니오')F.push('소화기 없음');if(f.ins==='아니오')F.push('보험 미가입');if(f.lpg==='예')F.push('LPG 사용');if((f.selfPower||[]).indexOf('발전기')>=0||f.gen)F.push('발전기 사용');if(+f.maxW&&eqSum(f)>+f.maxW)F.push('장비 합계가 기재 전력 초과');if(!f.license)F.push('영업신고 미기재');return F}
+  function tag(st){var c={'접수':'#eef3ff;color:#2f55b5','확인':'#fff6dc;color:#8a6100','제안':'#f0e9ff;color:#5b35b0','확정':'#17703a;color:#fff','거절':'#eee;color:#777'}[st]||'#eee;color:#555';return '<span class="tag" style="background:'+c+'">'+esc(st)+'</span>'}
+  function norm(it){var d=it.data&&typeof it.data==='object'?it.data:{},f={};for(var k in d)f[k]=d[k];f.id=it.id;f.no=it.no||'';var t=it.createdAt&&it.createdAt.toDate?it.createdAt.toDate():null;f.at=t?t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'';f.status=FST.indexOf(it.status)>=0?it.status:'접수';f.slot=it.slot||'';f.okNote=it.okNote||'';f.memo=it.memo||'';f.review=it.review&&typeof it.review==='object'?it.review:{};f.docsGot=Array.isArray(it.docsGot)?it.docsGot:[];f.docsSaid=Array.isArray(d.docs)?d.docs:[];if(!Array.isArray(f.equip))f.equip=[];if(!Array.isArray(f.selfPower))f.selfPower=[];return f}
+
+  function gate(html){$('reload').style.display='none';$('main').innerHTML='<div class="card" id="login">'+html+'</div>'}
+  function login(msg){
+    $('logout').style.display='none';
+    gate('<h2 style="margin:0 0 6px">관리자 로그인</h2><div class="muted" style="margin-bottom:14px">'+esc(msg||'Eight Labs 관리자 계정으로 로그인해 주세요.')+'</div><input type="text" id="em" placeholder="이메일" autocomplete="username" inputmode="email" style="width:100%;margin-bottom:8px"><input type="password" id="pw" placeholder="비밀번호" autocomplete="current-password" style="width:100%;margin-bottom:10px"><button class="btn pri" id="gGo" style="width:100%">로그인</button>');
+    var go=function(){var e=$('em').value.trim(),p=$('pw').value;if(!e||!p){toast('이메일과 비밀번호를 넣어 주세요');return}$('gGo').disabled=true;
+      FB.au.signInWithEmailAndPassword(FB.auth,e,p).catch(function(x){var b=$('gGo');if(b)b.disabled=false;var c=x&&x.code||'';toast(c==='auth/too-many-requests'?'시도가 너무 많아요. 잠시 뒤 다시 해 주세요':c==='auth/network-request-failed'?'인터넷 연결을 확인해 주세요':'이메일이나 비밀번호가 맞지 않아요')})};
+    $('gGo').addEventListener('click',go);$('pw').addEventListener('keydown',function(e){if(e.key==='Enter')go()});$('em').focus();
+  }
+  function listen(){
+    if(unsub)unsub();$('sync').textContent='불러오는 중…';
+    unsub=FB.fs.onSnapshot(FB.fs.collection(FB.db,'ft_applications'),function(sn){
+      L=sn.docs.map(function(d){var x=d.data();x.id=d.id;return norm(x)});var t=new Date();$('sync').textContent=(me.email||'')+' · 실시간 연결됨 '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+      var nw=L.filter(function(f){return f.status==='접수'}).length;document.title=(nw?'('+nw+') ':'')+'푸드트럭 신청 관리 · 에이트성수';
+      if($('mbg').classList.contains('on')){if(!L.some(function(f){return f.id===openId})){$('mbg').classList.remove('on');render()}}else render();
+    },function(e){$('sync').textContent='';
+      if(e&&e.code==='permission-denied')gate('<b>이 계정은 관리 권한이 없어요.</b><div class="muted" style="margin-top:8px">'+esc(me&&me.email||'')+'<br>Firestore 규칙 isStaff() 의 메일 목록에 이 주소를 넣어 주세요.</div>');
+      else gate('<b>불러오지 못했어요.</b><div class="muted" style="margin-top:8px">인터넷 연결을 확인하고 새로고침해 주세요.</div>')});
+  }
+  function patch(id,p,msg){
+    var f=L.find(function(x){return x.id===id});if(!f)return;for(var k in p)f[k]=p[k];if(!$('mbg').classList.contains('on'))render();
+    var b={updatedAt:FB.fs.serverTimestamp()};for(var k2 in p)b[k2]=p[k2];
+    FB.fs.updateDoc(FB.fs.doc(FB.db,'ft_applications',id),b).then(function(){if(msg)toast(msg)}).catch(function(){toast('저장하지 못했어요 — 권한이나 연결을 확인하세요')});
+  }
+  function boot(){
+    if(!CFG.projectId){gate('<b>Firebase 설정이 아직 없어요.</b><div class="muted" style="margin-top:8px">config.js 파일에 firebaseConfig 값을 넣고 다시 올려 주세요.</div>');return}
+    gate('<div class="muted">연결하는 중…</div>');
+    Promise.all([import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')]).then(function(m){
+      var app=m[0].initializeApp(CFG);FB={au:m[1],fs:m[2],auth:m[1].getAuth(app),db:m[2].getFirestore(app)};
+      FB.au.onAuthStateChanged(FB.auth,function(u){me=u;if(u){$('logout').style.display='';listen()}else{if(unsub){unsub();unsub=null}L=[];login()}});
+    }).catch(function(){gate('<b>Firebase에 연결하지 못했어요.</b><div class="muted" style="margin-top:8px">인터넷 연결을 확인해 주세요.</div>')});
+  }
+  function render(){
+    var qq=q.trim().toLowerCase(),F=L.filter(function(f){return (!fst||f.status===fst)&&(!qq||[f.biz,f.ceo,f.contact,f.phone,f.menu,f.carno,f.memo,f.no].join(' ').toLowerCase().indexOf(qq)>=0)}).sort(function(a,b){return FST.indexOf(a.status)-FST.indexOf(b.status)||String(b.at).localeCompare(String(a.at))});
+    var cnt=function(s){return L.filter(function(f){return f.status===s}).length},ok=L.filter(function(f){return f.status==='확정'}),wsum=ok.reduce(function(a,f){return a+(f.extPower==='불필요'?0:W(f))},0);
+    var kp=function(l,v,s){return '<div class="kpi"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="s">'+(s||'&nbsp;')+'</div></div>'};
+    var pill=function(v,t,n){return '<button class="btn sm" data-fs="'+esc(v)+'" style="'+(fst===v?'background:var(--ink);color:#fff;border-color:var(--ink)':'')+'">'+esc(t)+' <span style="opacity:.6">'+n+'</span></button>'};
+    var slots='';for(var i=1;i<=FT_MAX;i++){var s=ok.find(function(x){return +x.slot===i});slots+='<div style="flex:1;min-width:120px;border:1.5px '+(s?'solid var(--acc)':'dashed var(--line)')+';border-radius:10px;padding:10px 12px;background:'+(s?'#fffaf7':'#fff')+'"><div class="muted">자리 '+i+'</div><div style="font-weight:800;margin-top:2px">'+(s?esc(s.biz):'<span style="color:var(--sub);font-weight:600">비어 있음</span>')+'</div>'+(s?'<div class="muted">'+esc(String(s.menu||'').slice(0,24))+'</div>':'')+'</div>'}
+    var form=location.href.replace(/admin\.html.*$/,'');
+    $('main').innerHTML='<div class="kpis">'+kp('새로 들어온 신청',cnt('접수')+'곳','아직 확인 전')+kp('확인',cnt('확인')+'곳','검토 중')+kp('제안',cnt('제안')+'곳','조건 제안 후 대기')+kp('확정',ok.length+' / '+FT_MAX+'대',ok.length>FT_MAX?'<span style="color:#c0362c;font-weight:700">자리 초과</span>':'')+kp('확정 업체 외부 전력',wsum?wsum.toLocaleString('ko-KR')+'W':'-','외부 전원 필요 업체 합계')+'</div>'
+      +'<div class="card"><div style="font-weight:800;margin-bottom:8px">마당 자리 '+FT_MAX+'대</div><div class="row" style="align-items:stretch">'+slots+'</div></div>'
+      +'<div class="card"><div class="row"><input type="text" id="q" placeholder="업체·대표·연락처·메뉴·접수번호 검색" value="'+esc(q)+'" style="flex:1;min-width:200px"><a class="btn" href="'+esc(form)+'" target="_blank" rel="noopener">신청서 열기 ↗</a><button class="btn" id="cp">신청서 주소 복사</button></div><div class="row" style="gap:6px;margin-top:10px">'+pill('','전체',L.length)+FST.map(function(s){return pill(s,s,cnt(s))}).join('')+'</div></div>'
+      +(F.length?'<div class="tw"><table><tr><th>업체 · 메뉴</th><th>대표 · 연락처</th><th>희망 기간</th><th>전기</th><th>급수 · 오수</th><th>확인할 점</th><th>서류</th><th>검토</th><th>자리</th><th>상태</th><th>접수</th></tr>'+F.map(function(f){var rv=FREV.filter(function(r){return f.review[r[0]]}).length;
+        return '<tr class="click'+(f.status==='접수'&&!seen[f.id]?' new':'')+'" data-open="'+f.id+'"><td><b>'+esc(f.biz)+'</b><div class="muted" style="max-width:200px">'+esc(String(f.menu||'').slice(0,40))+'</div></td><td>'+esc(f.ceo||'')+'<div class="muted">'+esc(f.phone||'')+'</div></td><td>'+esc(f.period||'')+'</td><td style="white-space:nowrap">'+(W(f)?W(f).toLocaleString('ko-KR')+'W':'')+'<div class="muted">외부 전원 '+esc(f.extPower||'-')+'</div></td><td class="muted" style="white-space:nowrap">청수 '+esc(f.tank||'-')+(f.tankL?' '+esc(f.tankL)+'L':'')+'<br>오수 '+esc(f.waste||'-')+(f.wasteL?' '+esc(f.wasteL)+'L':'')+'</td><td style="max-width:200px">'+flags(f).map(function(x){return '<span class="flag">'+esc(x)+'</span>'}).join('')+'</td><td>'+f.docsGot.length+'/'+FDOCS.length+'</td><td>'+rv+'/'+FREV.length+'</td><td>'+(f.slot?esc(f.slot)+'번':'')+'</td><td><select data-st="'+f.id+'" style="padding:3px 4px;font-size:12px">'+FST.map(function(s){return '<option'+(s===f.status?' selected':'')+'>'+s+'</option>'}).join('')+'</select></td><td class="muted" style="white-space:nowrap">'+esc(String(f.at||'').slice(5,16))+'</td></tr>'}).join('')+'</table></div>'
+      :'<div class="card" style="text-align:center;color:var(--sub);padding:44px">'+(L.length?'조건에 맞는 신청이 없어요.':'아직 들어온 신청이 없어요. 신청서 주소를 업체에 보내 주세요.')+'</div>')
+      +'<div class="muted" style="margin-top:10px">업체가 신청서를 제출하면 바로 여기에 들어와요. 노란 줄은 아직 열어 보지 않은 새 신청이에요.</div>';
+  }
+  function view(id){
+    var f=L.find(function(x){return x.id===id});if(!f)return;openId=id;if(!seen[id]){seen[id]=1;try{localStorage.setItem(SEENK,JSON.stringify(seen))}catch(e){}}
+    var V=function(l,v){return v?'<div class="vr"><span>'+l+'</span><span>'+esc(v)+'</span></div>':''},fl=flags(f),o='';
+    for(var i=1;i<=FT_MAX;i++)o+='<option value="'+i+'"'+(+f.slot===i?' selected':'')+'>'+i+'번</option>';
+    $('modal').innerHTML='<h2>'+esc(f.biz)+' '+tag(f.status)+'<span class="muted" style="font-weight:400">'+esc(f.no||'')+' · '+esc(f.at||'')+'</span></h2>'
+      +(fl.length?'<div style="margin-bottom:10px">'+fl.map(function(x){return '<span class="flag" style="font-size:12px;padding:2px 9px">'+esc(x)+'</span>'}).join('')+'</div>':'')
+      +'<div class="fg"><label class="f">상태<select data-st="'+f.id+'" data-m="1">'+FST.map(function(s){return '<option'+(s===f.status?' selected':'')+'>'+s+'</option>'}).join('')+'</select></label><label class="f">마당 자리<select data-slot="'+f.id+'"><option value="">미정</option>'+o+'</select></label><label class="f w2">제안·확정 조건<input type="text" data-note="'+f.id+'" value="'+esc(f.okNote)+'" placeholder="예: 12월 주말 4회, 외부 전원 2kW까지"></label><label class="f w4">내부 메모<textarea data-memo="'+f.id+'" style="min-height:60px">'+esc(f.memo)+'</textarea></label></div>'
+      +'<div class="sec">내부 검토</div><div class="cg">'+FREV.map(function(r){return '<label><input type="checkbox" data-rv="'+f.id+'" data-k="'+r[0]+'"'+(f.review[r[0]]?' checked':'')+' style="margin-top:2px"><span><b>'+r[0]+'</b> <span class="muted">'+r[1]+'</span></span></label>'}).join('')+'</div>'
+      +'<div class="sec">제출서류 받은 것</div><div class="cg">'+FDOCS.map(function(d,i){return '<label><input type="checkbox" data-doc="'+f.id+'" data-k="'+i+'"'+(f.docsGot.indexOf(i)>=0?' checked':'')+' style="margin-top:2px"><span>'+esc(d)+(f.docsSaid.indexOf(i)>=0?' <span class="muted">· 업체가 준비됐다고 표시</span>':'')+'</span></label>'}).join('')+'</div>'
+      +'<div class="sec">01 업체 및 차량</div>'+V('대표자',f.ceo)+V('담당자',f.contact)+V('연락처',f.phone)+V('사업자등록번호',f.bizno)+V('판매 메뉴',f.menu)+V('희망 운영 기간',f.period)+V('차량번호',f.carno)+V('차량 크기',f.size)+V('영업신고',f.license)
+      +'<div class="sec">02 전기</div>'+(f.equip.length?'<div class="tw" style="margin-bottom:6px"><table style="min-width:0"><tr><th>장비</th><th>소비전력</th><th>수량</th><th>동시 사용</th></tr>'+f.equip.map(function(e){return '<tr><td>'+esc(e.name)+'</td><td>'+esc(e.w)+'W</td><td>'+esc(e.qty)+'</td><td>'+esc(e.sim)+'</td></tr>'}).join('')+'</table></div>':'')+V('동시 사용 장비 합계',eqSum(f)?eqSum(f).toLocaleString('ko-KR')+'W':'')+V('최대 동시 사용전력',f.maxW?(+f.maxW).toLocaleString('ko-KR')+'W':'')+V('외부 220V 전원',f.extPower)+V('자체 전력',f.selfPower.join(', '))+V('발전기 연료·출력',f.gen)
+      +'<div class="sec">03 급수</div>'+V('자체 청수탱크',f.tank)+V('청수탱크 용량',f.tankL?f.tankL+'L':'')+V('하루 물 사용량',f.waterL?f.waterL+'L':'')+V('하루 충전 횟수',f.refill?f.refill+'회':'')+V('현장 급수시설',f.useWater)
+      +'<div class="sec">04 오수·폐기물</div>'+V('자체 오수탱크',f.waste)+V('오수탱크 용량',f.wasteL?f.wasteL+'L':'')+V('하루 오수 발생량',f.wasteDayL?f.wasteDayL+'L':'')+V('오수 처리',f.wasteHow)+V('폐식용유',f.oil)+V('폐식용유 처리',f.oilHow)+V('쓰레기 처리',f.trashHow)
+      +'<div class="sec">05 조리·안전</div>'+V('LPG 사용',f.lpg)+V('전기 조리기기',f.elec)+V('화기 사용',f.fire)+V('소화기',f.ext)+V('환기·배기',f.vent)+V('배상책임보험',f.ins)+V('조리 방식',f.cook)+V('안전 특이사항',f.safety)
+      +'<div class="sec">08 신청 확인</div>'+V('준수사항 동의',f.agree?'동의함':'확인 안 됨')+V('신청일',f.date)+V('대표자(서명)',f.sign)
+      +'<div class="mfoot"><button class="btn danger" data-del="'+f.id+'">삭제</button><span class="sp"></span><button class="btn pri" data-close="1">닫기</button></div>';
+    $('mbg').classList.add('on');
+  }
+  var delAsk='',delAt=0;
+  document.addEventListener('click',function(e){var t=e.target;
+    if(t.closest('[data-st]'))return;
+    if(t.dataset.fs!==undefined){fst=t.dataset.fs;render();return}
+    if(t.dataset.close||t.id==='mbg'){$('mbg').classList.remove('on');openId='';render();return}
+    if(t.dataset.del){var id=t.dataset.del,n=Date.now();if(delAsk!==id||n-delAt>6000){delAsk=id;delAt=n;toast('한 번 더 누르면 삭제돼요');return}
+      FB.fs.deleteDoc(FB.fs.doc(FB.db,'ft_applications',id)).then(function(){$('mbg').classList.remove('on');openId='';toast('삭제했어요')}).catch(function(){toast('삭제하지 못했어요')});return}
+    if(t.id==='cp'){var u=location.href.replace(/admin\.html.*$/,'');(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){toast('신청서 주소를 복사했어요')},function(){toast(u)});return}
+    var r=t.closest('[data-open]');if(r&&!t.closest('a'))view(r.dataset.open);
+  });
+  document.addEventListener('change',function(e){var t=e.target,d=t.dataset;
+    if(d.st){patch(d.st,{status:t.value},'상태: '+t.value);if(d.m)view(d.st);else render();return}
+    if(d.slot){var v=t.value,o=v&&L.find(function(x){return x.id!==d.slot&&String(x.slot)===v&&x.status==='확정'});if(o){toast(v+'번 자리는 '+o.biz+'이(가) 쓰고 있어요');t.value=(L.find(function(x){return x.id===d.slot})||{}).slot||'';return}patch(d.slot,{slot:v},'자리 저장');return}
+    if(d.note){patch(d.note,{okNote:t.value.trim()},'저장했어요');return}
+    if(d.memo){patch(d.memo,{memo:t.value},'저장했어요');return}
+    if(d.rv){var f=L.find(function(x){return x.id===d.rv}),rv={};for(var k in f.review)rv[k]=f.review[k];rv[d.k]=t.checked;patch(d.rv,{review:rv});return}
+    if(d.doc){var g=L.find(function(x){return x.id===d.doc}),s=g.docsGot.filter(function(x){return x!==+d.k});if(t.checked)s.push(+d.k);s.sort();patch(d.doc,{docsGot:s});return}
+  });
+  var qt=null;document.addEventListener('input',function(e){if(e.target.id!=='q')return;q=e.target.value;clearTimeout(qt);qt=setTimeout(function(){render();var el=$('q');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}},250)});
+  $('logout').addEventListener('click',function(){FB.au.signOut(FB.auth)});
+  boot();
+})();
+</script>
+</body>
+</html>

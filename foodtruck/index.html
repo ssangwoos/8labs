@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>에이트성수 푸드트럭 입점 신청서</title>
+<style>
+:root{--ink:#17171b;--sub:#6d6d76;--line:#e2e1dc;--bg:#f4f1ec;--card:#fff;--acc:#ff5a1f;--accd:#c93d08;--soft:#fff3ec}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;font-size:16px;line-height:1.55;word-break:keep-all}
+.top{background:var(--ink);color:#fff;padding:28px 20px 26px}
+.top .in,.wrap{max-width:760px;margin:0 auto}
+.eyebrow{font-size:12px;letter-spacing:.18em;font-weight:700;color:var(--acc)}
+h1{margin:8px 0 10px;font-size:28px;line-height:1.25;letter-spacing:-.01em;text-wrap:balance}
+.top p{margin:0;color:#c9c9cf;font-size:15px}
+.wrap{padding:18px 14px 80px}
+.note{background:var(--soft);border:1px solid #ffd2bd;border-radius:12px;padding:14px 16px;font-size:14px;margin-bottom:14px}
+.note b{color:var(--accd)}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 18px;margin-bottom:14px}
+h2{margin:0 0 4px;font-size:18px;display:flex;gap:10px;align-items:baseline}
+h2 .n{color:var(--acc);font-size:13px;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.lead{margin:0 0 14px;color:var(--sub);font-size:14px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g .w{grid-column:1/-1}
+label.f{display:block;font-size:13px;font-weight:700;min-width:0}
+label.f>input,label.f>textarea,label.f>.unit{margin-top:5px;display:block}
+label.f>.unit{display:flex}
+label.f .req{color:var(--acc)}
+input[type=text],input[type=tel],input[type=number],input[type=date],textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;font:inherit;font-size:16px;font-weight:400;background:#fff;color:var(--ink);min-width:0}
+textarea{min-height:76px;resize:vertical}
+input:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:1px;border-color:var(--acc)}
+.unit{display:flex;align-items:center;gap:8px}
+.unit span{font-weight:400;color:var(--sub);flex:none}
+.q{padding:12px 0;border-top:1px solid #efeee9;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.q:first-of-type{border-top:0}
+.q .t{font-size:15px;font-weight:600;flex:1;min-width:150px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg label{position:relative;cursor:pointer}
+.seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg span{display:block;padding:9px 16px;border:1px solid var(--line);border-radius:999px;font-size:14px;font-weight:600;background:#fff;min-width:64px;text-align:center}
+.seg input:checked+span{background:var(--ink);color:#fff;border-color:var(--ink)}
+.seg input:focus-visible+span{outline:2px solid var(--acc);outline-offset:2px}
+.eq{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;align-items:end}
+.eq .x{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:9px 0;font-size:15px;cursor:pointer}
+.chk input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--acc);flex:none}
+.warn{font-size:13px;color:var(--sub);margin:10px 0 0}
+.warn::before{content:"※ "}
+ol.rules{margin:0;padding-left:20px;font-size:14px}
+ol.rules li{margin-bottom:7px}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 16px;font-weight:700;font-size:14px;color:var(--ink)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-size:17px;padding:16px;width:100%;border-radius:12px}
+.btn.link{border:0;background:none;color:var(--accd);padding:4px 0}
+.sum{font-size:15px;font-weight:700;margin-top:6px}
+.err{color:#c0271b;font-size:14px;font-weight:700;margin:10px 0 0;display:none}
+#done{display:none}
+#done textarea{min-height:220px;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace;background:#faf9f6}
+.steps{margin:0 0 14px;padding-left:20px;font-size:15px}
+.steps li{margin-bottom:6px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;font-weight:700;display:none}
+footer{text-align:center;color:var(--sub);font-size:13px;padding:6px 0 0}
+@media(max-width:560px){.g{grid-template-columns:1fr}.eq{grid-template-columns:1fr 1fr}.eq .nm{grid-column:1/-1}h1{font-size:24px}}
+</style>
+<script src="config.js"></script>
+</head>
+<body>
+<div class="top"><div class="in">
+  <div class="eyebrow">EIGHT SEONGSU · FOOD TRUCK APPLICATION</div>
+  <h1>에이트성수 푸드트럭 입점 신청서</h1>
+  <p>입점 신청과 운영 설비 확인을 한 번에 작성합니다. 5~10분 정도 걸립니다.</p>
+</div></div>
+
+<div class="wrap">
+<div id="form">
+  <div class="note">에이트성수는 <b>220V 보조전원</b>과 <b>공용 청수 보충시설</b>만 제한적으로 제공합니다. 오수는 업체가 직접 처리해야 합니다. 작성 중인 내용은 제출 전까지 이 기기에 임시 저장됩니다.</div>
+
+  <section>
+    <h2><span class="n">01</span>업체 및 차량 정보</h2><p class="lead"><span style="color:var(--acc)">*</span> 표시는 꼭 적어 주세요.</p>
+    <div class="g">
+      <label class="f">업체명 / 상호 <span class="req">*</span><input type="text" data-k="biz" autocomplete="organization"></label>
+      <label class="f">대표자명 <span class="req">*</span><input type="text" data-k="ceo" autocomplete="name"></label>
+      <label class="f">담당자<input type="text" data-k="contact"></label>
+      <label class="f">연락처 <span class="req">*</span><input type="tel" data-k="phone" autocomplete="tel" placeholder="010-0000-0000"></label>
+      <label class="f">사업자등록번호<input type="text" data-k="bizno" inputmode="numeric" placeholder="000-00-00000"></label>
+      <label class="f">차량번호<input type="text" data-k="carno"></label>
+      <label class="f w">판매 메뉴 <span class="req">*</span><textarea data-k="menu" placeholder="예: 수제버거, 감자튀김, 에이드"></textarea></label>
+      <label class="f">희망 운영 기간<input type="text" data-k="period" placeholder="예: 12월 주말 4회"></label>
+      <label class="f">차량 크기 (가로×세로×높이)<input type="text" data-k="size" placeholder="예: 4.5 × 1.9 × 2.6 m"></label>
+      <label class="f w">영업신고 업종 및 신고번호<input type="text" data-k="license" placeholder="예: 휴게음식점영업 / 제0000-0000호"></label>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">02</span>전기 사용 계획</h2><p class="lead">에이트성수는 일반 220V 보조전원만 제한적으로 제공합니다. 쓰는 장비를 모두 적어 주세요.</p>
+    <div id="eqs"></div>
+    <button class="btn" type="button" id="eqAdd">+ 장비 추가</button>
+    <div class="sum" id="eqSum"></div>
+    <div class="g" style="margin-top:14px">
+      <label class="f">최대 동시 사용전력<div class="unit"><input type="number" data-k="maxW" inputmode="numeric" min="0"><span>W</span></div></label>
+      <label class="f">발전기 사용 시 연료 및 정격출력<input type="text" data-k="gen" placeholder="예: 휘발유 / 3kW"></label>
+    </div>
+    <div class="q" style="margin-top:8px"><div class="t">외부 220V 전원 필요 여부</div><div class="seg" data-r="extPower" data-o="필요,불필요"></div></div>
+    <div class="q"><div class="t">자체 전력 확보 방식 <span style="font-weight:400;color:var(--sub)">(여러 개 선택)</span></div><div class="seg" data-m="selfPower" data-o="배터리,발전기,기타"></div></div>
+    <p class="warn">외부 전원 공급 가능 용량은 현장 확인 후 별도 안내합니다.</p>
+    <p class="warn">고전력 장비 및 발전기 사용은 사전 승인이 필요합니다.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">03</span>급수 사용 계획</h2><p class="lead">업체별 자체 청수탱크를 원칙으로 하며, 현장 공용 급수시설에서 물 보충이 가능합니다.</p>
+    <div class="q"><div class="t">자체 청수탱크 보유</div><div class="seg" data-r="tank" data-o="예,아니오"></div></div>
+    <div class="g" style="margin:6px 0 4px">
+      <label class="f">청수탱크 용량<div class="unit"><input type="number" data-k="tankL" inputmode="numeric" min="0"><span>L</span></div></label>
+      <label class="f">하루 예상 물 사용량<div class="unit"><input type="number" data-k="waterL" inputmode="numeric" min="0"><span>L</span></div></label>
+      <label class="f">하루 예상 충전 횟수<div class="unit"><input type="number" data-k="refill" inputmode="numeric" min="0"><span>회</span></div></label>
+    </div>
+    <div class="q"><div class="t">현장 급수시설 이용</div><div class="seg" data-r="useWater" data-o="필요,불필요"></div></div>
+    <p class="warn">급수는 청수탱크 보충 용도로 제공하며, 차량별 상시 수도 연결은 지원하지 않습니다.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">04</span>오수 및 폐기물 처리 계획</h2><p class="lead">에이트성수는 푸드트럭 전용 오수 배출시설을 제공하지 않습니다.</p>
+    <div class="q"><div class="t">자체 오수탱크 보유</div><div class="seg" data-r="waste" data-o="예,아니오"></div></div>
+    <div class="g" style="margin:6px 0 4px">
+      <label class="f">오수탱크 용량<div class="unit"><input type="number" data-k="wasteL" inputmode="numeric" min="0"><span>L</span></div></label>
+      <label class="f">하루 예상 오수 발생량<div class="unit"><input type="number" data-k="wasteDayL" inputmode="numeric" min="0"><span>L</span></div></label>
+      <label class="f w">오수 처리 장소 및 방법<input type="text" data-k="wasteHow"></label>
+    </div>
+    <div class="q"><div class="t">폐식용유 발생 여부</div><div class="seg" data-r="oil" data-o="있음,없음"></div></div>
+    <div class="g" style="margin-top:6px">
+      <label class="f w">폐식용유 처리 방법<input type="text" data-k="oilHow"></label>
+      <label class="f w">일반쓰레기 및 음식물쓰레기 처리 방법<input type="text" data-k="trashHow"></label>
+    </div>
+    <p class="warn">오수, 기름, 음식물 잔여물 등을 마당 바닥, 우수관 또는 화단 등에 배출하는 행위는 금지합니다.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">05</span>조리 및 안전설비</h2><p class="lead">해당하는 쪽을 골라 주세요.</p>
+    <div class="q"><div class="t">LPG 사용</div><div class="seg" data-r="lpg" data-o="예,아니오"></div></div>
+    <div class="q"><div class="t">전기 조리기기 사용</div><div class="seg" data-r="elec" data-o="예,아니오"></div></div>
+    <div class="q"><div class="t">튀김·구이 등 화기 사용</div><div class="seg" data-r="fire" data-o="예,아니오"></div></div>
+    <div class="q"><div class="t">소화기 보유</div><div class="seg" data-r="ext" data-o="예,아니오"></div></div>
+    <div class="q"><div class="t">환기·배기 설비 보유</div><div class="seg" data-r="vent" data-o="예,아니오"></div></div>
+    <div class="q"><div class="t">영업배상책임보험 가입</div><div class="seg" data-r="ins" data-o="예,아니오"></div></div>
+    <div class="g" style="margin-top:10px">
+      <label class="f w">주요 조리 방식<input type="text" data-k="cook" placeholder="예: 철판 구이, 전기 튀김기"></label>
+      <label class="f w">기타 안전 관련 특이사항<textarea data-k="safety"></textarea></label>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">06</span>필수 제출서류</h2><p class="lead">준비된 서류에 표시해 주세요. 서류 파일은 신청서를 보낼 때 함께 보내 주시면 됩니다.</p>
+    <div id="docs"></div>
+    <p class="warn">영업신고 및 차량·가스·위생 관련 추가 서류는 관할기관 확인 결과에 따라 요청할 수 있습니다.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">07</span>입점 운영 준수사항</h2><p class="lead">아래 내용을 읽고 확인해 주세요.</p>
+    <ol class="rules">
+      <li>에이트성수는 일반 220V 보조전원과 공용 청수 보충시설만 제한적으로 제공합니다.</li>
+      <li>입점업체는 자체 전력·급수·오수 처리 설비를 확보하고, 영업에 필요한 인허가와 위생·안전 요건을 준수해야 합니다.</li>
+      <li>전기 사용량은 사전에 승인받은 범위를 초과할 수 없습니다.</li>
+      <li>발전기, LPG 등 연료 및 화기 사용은 사전 승인 후 안전기준에 따라 운영해야 합니다.</li>
+      <li>오수와 폐식용유는 현장에 무단 배출할 수 없으며, 적법하게 처리해야 합니다.</li>
+      <li>영업 종료 후 발생한 쓰레기와 주변 오염은 입점업체가 정리해야 합니다.</li>
+      <li>시설물 훼손 또는 업체 귀책으로 발생한 손해는 관련 법령과 계약에 따라 처리합니다.</li>
+      <li>허위 기재, 무단 설비 사용 또는 중대한 안전수칙 위반 시 운영 중단이나 입점 취소 등의 조치가 이루어질 수 있습니다.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="n">08</span>신청 및 확인</h2>
+    <label class="chk"><input type="checkbox" id="agree"><span>본 업체는 위 신청 내용을 사실대로 기재하였으며, 에이트성수의 푸드트럭 운영 기준을 확인하고 준수하는 데 동의합니다.</span></label>
+    <div class="g" style="margin-top:10px">
+      <label class="f">신청일<input type="date" data-k="date"></label>
+      <label class="f">대표자 (서명 대신 이름을 적어 주세요) <span class="req">*</span><input type="text" data-k="sign"></label>
+    </div>
+    <p class="err" id="err"></p>
+    <input type="text" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+    <div style="margin-top:16px"><button class="btn pri" type="button" id="go">신청서 제출</button></div>
+    <div style="text-align:center;margin-top:10px"><button class="btn link" type="button" id="reset">처음부터 다시 쓰기</button></div>
+  </section>
+</div>
+
+<div id="ok" style="display:none">
+  <section style="text-align:center;padding:36px 20px">
+    <div style="width:64px;height:64px;border-radius:50%;background:var(--acc);color:#fff;font-size:34px;line-height:64px;margin:0 auto 14px">✓</div>
+    <h2 style="justify-content:center;font-size:22px">접수가 완료되었습니다</h2>
+    <p class="lead" style="margin-top:8px">신청해 주셔서 감사합니다. 내용을 확인한 뒤 적어 주신 연락처로 안내드리겠습니다.</p>
+    <div style="display:inline-block;background:var(--soft);border:1px solid #ffd2bd;border-radius:10px;padding:10px 18px;font-weight:800">접수번호 <span id="okNo" style="color:var(--accd)"></span></div>
+    <p class="lead" style="margin:16px 0 0">06번의 제출서류 파일은 담당자 안내에 따라 따로 보내 주세요.</p>
+  </section>
+</div>
+<div id="done">
+  <section>
+    <h2 id="doneT">신청서가 만들어졌습니다</h2>
+    <p class="lead" id="doneL">아직 전송된 것은 아닙니다. 아래 순서로 보내 주세요.</p>
+    <ol class="steps">
+      <li><b>신청서 복사</b>를 누릅니다.</li>
+      <li>안내받은 에이트성수 담당자에게 <b>카카오톡·문자·이메일</b>로 붙여넣어 보냅니다.</li>
+      <li>06번의 제출서류 파일을 같은 대화에 함께 보냅니다.</li>
+    </ol>
+    <button class="btn pri" type="button" id="copy">신청서 복사</button>
+    <p class="lead" style="margin:14px 0 6px">복사가 안 되면 아래 칸을 길게 눌러 전체 선택 후 복사해 주세요. 맨 아래 <b>#FT1</b>로 시작하는 줄까지 모두 포함해야 합니다.</p>
+    <textarea id="out" readonly></textarea>
+    <div style="text-align:center;margin-top:12px"><button class="btn" type="button" id="back">내용 고치기</button></div>
+  </section>
+</div>
+
+<footer>EIGHT SEONGSU · 서울특별시 성동구 성수동2가 273-20</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var KEY='ft-apply-v1';
+  var DOCS=['사업자등록증 사본','해당 장소에서의 영업 가능 여부 확인에 필요한 영업신고 관련 서류','차량 사진 (전면·측면·내부)','판매 메뉴 및 가격표','전기장비 사양 및 소비전력 자료','급수·오수탱크 용량 및 처리 계획','LPG·발전기 관련 안전서류 (해당 업체)','보험 가입증명서 (가입 업체)'];
+  var D={equip:[{name:'',w:'',qty:'1',sim:'예'}],selfPower:[],docs:[]};
+  try{var s=localStorage.getItem(KEY);if(s){var o=JSON.parse(s);if(o&&typeof o==='object')D=Object.assign(D,o)}}catch(e){}
+  if(!Array.isArray(D.equip)||!D.equip.length)D.equip=[{name:'',w:'',qty:'1',sim:'예'}];
+  if(!Array.isArray(D.selfPower))D.selfPower=[];if(!Array.isArray(D.docs))D.docs=[];
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  var made=false;function keep(){if(made)return;try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
+  function toast(t){var el=document.getElementById('toast');el.textContent=t;el.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(function(){el.style.display='none'},2200)}
+  function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+  if(!D.date)D.date=today();
+
+  // 단순 입력
+  document.querySelectorAll('[data-k]').forEach(function(el){el.value=D[el.dataset.k]||'';el.addEventListener('input',function(){D[el.dataset.k]=el.value;keep()})});
+  // 하나 고르기 / 여러 개 고르기
+  document.querySelectorAll('.seg').forEach(function(box){
+    var k=box.dataset.r||box.dataset.m,multi=!!box.dataset.m;
+    box.innerHTML=box.dataset.o.split(',').map(function(o){var on=multi?D[k].indexOf(o)>=0:D[k]===o;return '<label><input type="'+(multi?'checkbox':'radio')+'" name="'+k+'" value="'+o+'"'+(on?' checked':'')+'><span>'+o+'</span></label>'}).join('');
+    box.addEventListener('change',function(){if(multi){D[k]=[].slice.call(box.querySelectorAll('input:checked')).map(function(i){return i.value})}else{var c=box.querySelector('input:checked');D[k]=c?c.value:''}keep()});
+  });
+  // 서류
+  document.getElementById('docs').innerHTML=DOCS.map(function(t,i){return '<label class="chk"><input type="checkbox" data-d="'+i+'"'+(D.docs.indexOf(i)>=0?' checked':'')+'><span>'+esc(t)+'</span></label>'}).join('');
+  document.getElementById('docs').addEventListener('change',function(){D.docs=[].slice.call(document.querySelectorAll('[data-d]:checked')).map(function(i){return +i.dataset.d});keep()});
+  // 장비
+  function eqSum(){var t=0;D.equip.forEach(function(e){if(e.sim!=='아니오')t+=(+e.w||0)*(+e.qty||0)});document.getElementById('eqSum').textContent=t?'동시 사용 장비 합계: '+t.toLocaleString('ko-KR')+' W':'';return t}
+  function eqPaint(){
+    document.getElementById('eqs').innerHTML=D.equip.map(function(e,i){return '<div class="eq"><label class="f nm">사용 장비<input type="text" data-e="'+i+'" data-f="name" value="'+esc(e.name)+'" placeholder="예: 전기 튀김기"></label><label class="f">소비전력(W)<input type="number" inputmode="numeric" min="0" data-e="'+i+'" data-f="w" value="'+esc(e.w)+'"></label><label class="f">수량<input type="number" inputmode="numeric" min="0" data-e="'+i+'" data-f="qty" value="'+esc(e.qty)+'"></label><div class="x"><label class="chk" style="padding:0"><input type="checkbox" data-e="'+i+'" data-f="sim"'+(e.sim!=='아니오'?' checked':'')+'><span>다른 장비와 동시에 사용</span></label>'+(D.equip.length>1?'<button class="btn link" type="button" data-x="'+i+'">빼기</button>':'')+'</div></div>'}).join('');eqSum();
+  }
+  eqPaint();
+  var eqs=document.getElementById('eqs');
+  eqs.addEventListener('input',function(e){var t=e.target;if(t.dataset.e==null)return;var it=D.equip[+t.dataset.e];if(t.dataset.f==='sim')it.sim=t.checked?'예':'아니오';else it[t.dataset.f]=t.value;keep();eqSum()});
+  eqs.addEventListener('click',function(e){var b=e.target.closest('[data-x]');if(!b)return;D.equip.splice(+b.dataset.x,1);keep();eqPaint()});
+  document.getElementById('eqAdd').addEventListener('click',function(){D.equip.push({name:'',w:'',qty:'1',sim:'예'});keep();eqPaint();var a=eqs.querySelectorAll('[data-f=name]');a[a.length-1].focus()});
+
+  document.getElementById('agree').checked=!!D.agree;
+  document.getElementById('agree').addEventListener('change',function(e){D.agree=e.target.checked;keep()});
+
+  function b64(str){var b=new TextEncoder().encode(str),s='';for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+  function build(){
+    var d=JSON.parse(JSON.stringify(D));d.equip=d.equip.filter(function(e){return e.name||e.w});d.v=1;d.at=new Date().toISOString();
+    var L=[],p=function(l,v){if(v!==''&&v!=null&&!(Array.isArray(v)&&!v.length))L.push('· '+l+': '+(Array.isArray(v)?v.join(', '):v))};
+    L.push('[에이트성수 푸드트럭 입점 신청서]');
+    p('업체명',d.biz);p('대표자',d.ceo);p('담당자',d.contact);p('연락처',d.phone);p('사업자등록번호',d.bizno);p('판매 메뉴',d.menu);p('희망 운영 기간',d.period);p('차량번호',d.carno);p('차량 크기',d.size);p('영업신고',d.license);
+    if(d.equip.length)L.push('· 전기 장비: '+d.equip.map(function(e){return e.name+' '+(e.w||'?')+'W×'+(e.qty||1)+(e.sim==='아니오'?'(동시 아님)':'')}).join(' / '));
+    p('최대 동시 사용전력',d.maxW?d.maxW+'W':'');p('외부 220V 전원',d.extPower);p('자체 전력',d.selfPower);p('발전기',d.gen);
+    p('청수탱크',d.tank?(d.tank+(d.tankL?' '+d.tankL+'L':'')):'');p('하루 물 사용량',d.waterL?d.waterL+'L':'');p('하루 충전 횟수',d.refill?d.refill+'회':'');p('현장 급수시설',d.useWater);
+    p('오수탱크',d.waste?(d.waste+(d.wasteL?' '+d.wasteL+'L':'')):'');p('하루 오수 발생량',d.wasteDayL?d.wasteDayL+'L':'');p('오수 처리',d.wasteHow);p('폐식용유',d.oil?(d.oil+(d.oilHow?' — '+d.oilHow:'')):'');p('쓰레기 처리',d.trashHow);
+    p('LPG',d.lpg);p('전기 조리기기',d.elec);p('화기 사용',d.fire);p('소화기',d.ext);p('환기·배기',d.vent);p('배상책임보험',d.ins);p('조리 방식',d.cook);p('안전 특이사항',d.safety);
+    p('준비된 서류',d.docs.length+'/'+DOCS.length+'개');
+    L.push('· 운영 준수사항 동의: 예 / 신청일 '+d.date+' / 대표자 '+d.sign);
+    L.push('');L.push('(아래 줄은 지우지 말고 함께 보내 주세요)');L.push('#FT1.'+b64(JSON.stringify(d)));
+    return L.join('\n');
+  }
+  function fail(msg,k){var er=document.getElementById('err');er.textContent=msg;er.style.display='block';var el=k&&document.querySelector('[data-k="'+k+'"]');if(el){el.focus();el.scrollIntoView({block:'center'})}}
+  document.getElementById('go').addEventListener('click',function(){
+    var need=[['biz','업체명 / 상호'],['ceo','대표자명'],['phone','연락처'],['menu','판매 메뉴'],['sign','대표자 이름(서명)']];
+    for(var i=0;i<need.length;i++)if(!String(D[need[i][0]]||'').trim())return fail(need[i][1]+'을(를) 적어 주세요.',need[i][0]);
+    if(!D.agree)return fail('운영 준수사항 동의에 표시해 주세요.');
+    document.getElementById('err').style.display='none';
+    var text=build(),cfg=window.FT_FIREBASE||{},btn=document.getElementById('go');
+    var showCopy=function(failed){document.getElementById('out').value=text;try{localStorage.removeItem(KEY)}catch(e){}made=true;
+      if(failed){document.getElementById('doneT').textContent='자동 접수가 되지 않았습니다';document.getElementById('doneL').textContent='죄송합니다. 아래 순서로 직접 보내 주시면 접수됩니다.'}
+      document.getElementById('form').style.display='none';document.getElementById('done').style.display='block';window.scrollTo(0,0)};
+    if(!cfg.projectId)return showCopy(false);
+    if(document.getElementById('hp').value){document.getElementById('okNo').textContent='FT-0000';document.getElementById('form').style.display='none';document.getElementById('ok').style.display='block';return}
+    if(btn.disabled)return;btn.disabled=true;btn.textContent='제출하는 중…';
+    var d=JSON.parse(JSON.stringify(D));d.equip=d.equip.filter(function(e){return e.name||e.w}).slice(0,30);d.v=1;d.at=new Date().toISOString();
+    Object.keys(d).forEach(function(k){if(typeof d[k]==='string')d[k]=d[k].slice(0,600)});
+    var n=new Date(),no='FT-'+String(n.getMonth()+1).padStart(2,'0')+String(n.getDate()).padStart(2,'0')+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
+    var done=function(){btn.disabled=false;btn.textContent='신청서 제출'},over=false,tm=setTimeout(function(){over=true;done();showCopy(true)},25000);
+    Promise.all([import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-lite.js')]).then(function(m){
+      var app=m[0].getApps().length?m[0].getApp():m[0].initializeApp(cfg),fs=m[1],db=fs.getFirestore(app);
+      return fs.addDoc(fs.collection(db,'ft_applications'),{no:no,status:'접수',createdAt:fs.serverTimestamp(),data:d});
+    }).then(function(){if(over)return;clearTimeout(tm);done();try{localStorage.removeItem(KEY)}catch(e){}made=true;
+      document.getElementById('okNo').textContent=no;document.getElementById('form').style.display='none';document.getElementById('ok').style.display='block';window.scrollTo(0,0);
+    }).catch(function(e){if(over)return;clearTimeout(tm);done();try{console.error(e)}catch(_){}showCopy(true)});
+  });
+  document.getElementById('back').addEventListener('click',function(){document.getElementById('done').style.display='none';document.getElementById('form').style.display='block';window.scrollTo(0,0)});
+  document.getElementById('copy').addEventListener('click',function(){
+    var ta=document.getElementById('out'),ok=function(){toast('복사했습니다. 담당자에게 붙여넣어 보내 주세요.')};
+    var old=function(){ta.focus();ta.select();try{ta.setSelectionRange(0,ta.value.length)}catch(e){}var r=false;try{r=document.execCommand('copy')}catch(e){}if(r)ok();else toast('복사가 막혀 있어요. 아래 칸을 직접 선택해 복사해 주세요.')};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(ok,old);else old();
+  });
+  var rs=0;
+  document.getElementById('reset').addEventListener('click',function(){var n=Date.now();if(n-rs>5000){rs=n;toast('한 번 더 누르면 모두 지워집니다.');return}try{localStorage.removeItem(KEY)}catch(e){}
+    D={equip:[{name:'',w:'',qty:'1',sim:'예'}],selfPower:[],docs:[],date:today()};
+    document.querySelectorAll('[data-k]').forEach(function(el){el.value=D[el.dataset.k]||''});
+    document.querySelectorAll('input[type=checkbox],input[type=radio]').forEach(function(el){el.checked=false});
+    eqPaint();rs=0;window.scrollTo(0,0);toast('모두 지웠습니다.')});
+})();
+</script>
+</body>
+</html>
