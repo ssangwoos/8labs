@@ -323,6 +323,9 @@ const STAGES = [
 ];
 const STAGE = Object.fromEntries(STAGES.map(s=>[s.key,s]));
 STAGE.cancelled = {key:'cancelled', label:'취소', color:'var(--sx)', ink:'var(--onx)'};
+STAGE.declined  = {key:'declined',  label:'거절', color:'var(--sx)', ink:'var(--onx)'};
+/* 더 이상 진행하지 않는 상태 */
+const DEAD = { cancelled:1, declined:1 };
 
 /* 국가 코드 → 국기 + 한국어 표기 */
 const COUNTRY = {
@@ -594,8 +597,8 @@ function inScope(r){
 function render(){
   const inView = ROWS.filter(inScope);
   /* 취소된 크리에이터는 집계·파이프라인에서 빼고 표 하단에 따로 둡니다 */
-  const dead   = inView.filter(r => r.status === 'cancelled');
-  const scoped = inView.filter(r => r.status !== 'cancelled');
+  const dead   = inView.filter(r =>  DEAD[r.status]);
+  const scoped = inView.filter(r => !DEAD[r.status]);
   ROWS.forEach(r=>{ if(r.masked===undefined) r.masked = !String(r.handle||'').startsWith('@'); });
   const rows = scoped
     .filter(r=> status==='all' || r.status===status)
@@ -697,7 +700,7 @@ function render(){
     ? rows.map(r=>'<tr>'+cols.map(c=>cell(r,c.k)).join('')+'</tr>').join('')
     : `<tr><td colspan="${cols.length}" class="empty">선택한 조건에 해당하는 크리에이터가 없습니다.</td></tr>`;
   const deadHtml = (CONFIG.cancelled === true && dead.length)
-    ? `<tr class="sep"><td colspan="${cols.length}">취소 · ${dead.length}명</td></tr>`
+    ? `<tr class="sep"><td colspan="${cols.length}">취소 · 거절 · ${dead.length}명</td></tr>`
       + dead.map(r=>'<tr class="canc">'+cols.map(c=>cell(r,c.k)).join('')+'</tr>').join('')
     : '';
   document.getElementById('tbody').innerHTML = mainHtml + deadHtml;
