@@ -99,13 +99,26 @@
 
   <div class="card">
     <h2>설정</h2>
-    <div class="seg" id="segOri">
+    <label class="opt" style="margin-top:0">카운트 방식</label>
+    <div class="seg" id="segMode">
+      <button data-v="p">자동 (선 없이 지나가는 사람)</button>
+      <button data-v="l">기준선 통과</button>
+    </div>
+    <div id="lineOpts">
+    <div class="seg" id="segOri" style="margin-top:12px">
       <button data-v="v">세로선 (좌우로 지나감)</button>
       <button data-v="h">가로선 (위아래로 지나감)</button>
+    </div>
+    <label class="opt">인식 거리 (멀리일수록 작은 사람까지 잡지만 분석 속도는 느려짐)</label>
+    <div class="seg" id="segRange">
+      <button data-v="0">가까이</button>
+      <button data-v="1">중간</button>
+      <button data-v="2">멀리</button>
     </div>
     <label class="opt">선 위치 <span id="posVal"></span>
       <input type="range" id="pos" min="10" max="90" step="1">
     </label>
+    </div>
     <label class="opt">인식 민감도 (낮출수록 더 많이 잡음) <span id="scoreVal"></span>
       <input type="range" id="score" min="30" max="80" step="5">
     </label>
@@ -130,7 +143,7 @@ var KEEP_MS = 30 * DAY, MAX_EVENTS = 200000;
 /* ---------- 저장 데이터 ---------- */
 // events: 시간순 정렬된 숫자 배열. 양수 = A방향(→/↓), 음수 = B방향(←/↑). 절댓값 = 통과 시각(ms)
 var events = [];
-var S = { ori:'v', pos:50, score:50, facing:'environment', unit:1 };
+var S = { ori:'v', pos:50, score:45, facing:'environment', unit:1, range:2, mode:'p' };
 try { var e0 = JSON.parse(localStorage.getItem(KEY_EV) || '[]'); if (Array.isArray(e0)) events = e0; } catch(e){}
 try { var s0 = JSON.parse(localStorage.getItem(KEY_SET) || '{}'); for (var k in s0) if (k in S) S[k] = s0[k]; } catch(e){}
 
@@ -251,16 +264,25 @@ UNITS.forEach(function(u, i){
 });
 
 /* ---------- 설정 UI ---------- */
-function dirLabels(){ return S.ori === 'v' ? ['→ 오른쪽', '← 왼쪽'] : ['↓ 아래', '↑ 위']; }
+function dirLabels(){ return (S.mode === 'p' || S.ori === 'v') ? ['→ 오른쪽', '← 왼쪽'] : ['↓ 아래', '↑ 위']; }
 function syncUI(){
   [].forEach.call(tabs.children, function(b, i){ b.className = i === S.unit ? 'on' : ''; });
   [].forEach.call($('segOri').children, function(b){ b.className = b.dataset.v === S.ori ? 'on' : ''; });
+  [].forEach.call($('segMode').children, function(b){ b.className = b.dataset.v === S.mode ? 'on' : ''; });
+  $('lineOpts').style.display = S.mode === 'l' ? '' : 'none';
+  [].forEach.call($('segRange').children, function(b){ b.className = +b.dataset.v === S.range ? 'on' : ''; });
   $('pos').value = S.pos; $('posVal').textContent = S.pos + '%';
   $('score').value = S.score; $('scoreVal').textContent = S.score + '%';
   var L = dirLabels(); $('dirALabel').textContent = L[0]; $('dirBLabel').textContent = L[1];
 }
 [].forEach.call($('segOri').children, function(b){
   b.onclick = function(){ S.ori = b.dataset.v; tracks = []; saveSettings(); syncUI(); drawOverlay([]); };
+});
+[].forEach.call($('segMode').children, function(b){
+  b.onclick = function(){ S.mode = b.dataset.v; tracks = []; saveSettings(); syncUI(); drawOverlay([]); renderTiles(); };
+});
+[].forEach.call($('segRange').children, function(b){
+  b.onclick = function(){ S.range = +b.dataset.v; saveSettings(); syncUI(); };
 });
 $('pos').oninput = function(){ S.pos = +this.value; tracks.forEach(function(t){ t.side = 0; }); saveSettings(); syncUI(); drawOverlay([]); };
 $('score').oninput = function(){ S.score = +this.value; saveSettings(); syncUI(); };
@@ -301,7 +323,7 @@ function stopStream(){ if (stream){ stream.getTracks().forEach(function(t){ t.st
 
 var SECURE = window.isSecureContext && location.protocol === 'https:' || location.hostname === 'localhost';
 var NOT_SECURE_MSG = '파일로 직접 열면 브라우저가 카메라를 막습니다. https 주소(예: 8labs.kr)에 올린 뒤 Safari·Chrome에서 열어 주세요.';
-$('placeholder').innerHTML = SECURE ? '아래 [카메라 시작]을 누르면<br>화면의 선을 넘어가는 사람을 셉니다' : NOT_SECURE_MSG;
+$('placeholder').innerHTML = SECURE ? '아래 [카메라 시작]을 누르면<br>화면을 지나가는 사람을 셉니다' : NOT_SECURE_MSG;
 async function start(){
   if (!SECURE || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     setStatus(NOT_SECURE_MSG, true); return;
@@ -316,7 +338,7 @@ async function start(){
     setStatus('카메라 여는 중…');
     stopStream();
     stream = await navigator.mediaDevices.getUserMedia({ audio:false,
-      video:{ facingMode:{ ideal:S.facing }, width:{ ideal:640 }, height:{ ideal:480 } } });
+      video:{ facingMode:{ ideal:S.facing }, width:{ ideal:1280 }, height:{ ideal:720 } } });
     video.srcObject = stream; await video.play();
     $('placeholder').style.display = 'none';
     tracks = []; running = true; requestWake();
@@ -349,8 +371,7 @@ async function loop(){
     busy = true;
     try {
       if (overlay.width !== video.videoWidth){ overlay.width = video.videoWidth; overlay.height = video.videoHeight; }
-      var preds = await model.detect(video, 20, S.score / 100);
-      var people = preds.filter(function(p){ return p.class === 'person'; });
+      var people = await detectAll();
       if (running){ track(people); drawOverlay(people); }
       var t = performance.now(); if (lastT) fps = fps * 0.8 + (1000 / (t - lastT)) * 0.2; lastT = t;
       setStatus('카운팅 중 · 화면 내 ' + people.length + '명 · 초당 ' + fps.toFixed(1) + '회 분석');
@@ -360,14 +381,68 @@ async function loop(){
   requestAnimationFrame(loop);
 }
 
+/* 전체 화면 1회 + 화면을 나눠 확대한 조각들을 추가로 분석해 멀리 있는 작은 사람까지 찾는다 */
+var tileCv = document.createElement('canvas'), tctx = tileCv.getContext('2d'), tick = 0;
+function isPerson(p){ return p.class === 'person'; }
+async function detectAll(){
+  var W = video.videoWidth, H = video.videoHeight, th = S.score / 100, out = [];
+  (await model.detect(video, 30, th)).filter(isPerson).forEach(function(p){ out.push({ bbox:p.bbox, score:p.score }); });
+  if (S.range > 0){
+    var nx = 2, ny = 2;
+    if (S.range === 1){ if (W >= H) ny = 1; else nx = 1; }
+    var tw = nx > 1 ? Math.round(W * 0.6) : W, thh = ny > 1 ? Math.round(H * 0.6) : H, e = 3;
+    if (tileCv.width !== tw || tileCv.height !== thh){ tileCv.width = tw; tileCv.height = thh; }
+    tick++;
+    for (var iy = 0; iy < ny; iy++) for (var ix = 0; ix < nx; ix++){
+      if (nx * ny === 4 && ((ix + iy + tick) & 1)) continue;   // 대각선 2조각씩 번갈아
+      var x0 = ix * (W - tw), y0 = iy * (H - thh);
+      tctx.drawImage(video, x0, y0, tw, thh, 0, 0, tw, thh);
+      var preds = await model.detect(tileCv, 30, th);
+      preds.filter(isPerson).forEach(function(p){
+        var b = p.bbox;                       // 조각 경계에서 잘린 몸은 버림(겹치는 옆 조각이나 전체 화면에서 잡힘)
+        if (x0 > 0 && b[0] <= e) return;
+        if (y0 > 0 && b[1] <= e) return;
+        if (x0 + tw < W && b[0] + b[2] >= tw - e) return;
+        if (y0 + thh < H && b[1] + b[3] >= thh - e) return;
+        out.push({ bbox:[b[0] + x0, b[1] + y0, b[2], b[3]], score:p.score });
+      });
+    }
+  }
+  return dedupe(out);
+}
+function dedupe(list){                       // 같은 사람이 여러 번 잡힌 것 합치기
+  list.sort(function(a, b){ return b.score - a.score; });
+  var keep = [];
+  list.forEach(function(d){
+    var A = d.bbox, aA = A[2] * A[3];
+    for (var i = 0; i < keep.length; i++){
+      var B = keep[i].bbox, aB = B[2] * B[3];
+      var iw = Math.min(A[0] + A[2], B[0] + B[2]) - Math.max(A[0], B[0]);
+      var ih = Math.min(A[1] + A[3], B[1] + B[3]) - Math.max(A[1], B[1]);
+      if (iw <= 0 || ih <= 0) continue;
+      var inter = iw * ih, mn = Math.min(aA, aB), mx = Math.max(aA, aB);
+      if (inter / (aA + aB - inter) > 0.45) return;
+      if (mn / mx > 0.25 && inter / mn > 0.7) return;
+    }
+    keep.push(d);
+  });
+  return keep;
+}
+
 /* 사람별로 위치를 이어 붙여 추적하고, 선을 넘어가면 1명으로 센다 */
 function track(people){
   var W = overlay.width, H = overlay.height, now = performance.now();
-  var maxDist = Math.sqrt(W*W + H*H) * 0.2;
-  var dets = people.map(function(p){ return { cx:p.bbox[0] + p.bbox[2]/2, cy:p.bbox[1] + p.bbox[3]/2, used:false }; });
+  var diag = Math.sqrt(W*W + H*H);
+  // 추적 기준점 = 머리(박스 윗변 가운데). 화면에 찍히는 점과 카운트 기준이 같다
+  var dets = people.map(function(p){ return { cx:p.bbox[0] + p.bbox[2]/2, cy:p.bbox[1], h:p.bbox[3], used:false }; });
   var pairs = [];
   tracks.forEach(function(t, ti){ dets.forEach(function(d, di){
-    var dist = Math.hypot(t.cx - d.cx, t.cy - d.cy); if (dist < maxDist) pairs.push([dist, ti, di]);
+    var dt = Math.min(now - t.seen, 2000);
+    var dist = Math.hypot(t.cx + t.vx * dt - d.cx, t.cy + t.vy * dt - d.cy);   // 예상 위치와의 거리
+    var big = Math.max(t.h, d.h), small = Math.max(1, Math.min(t.h, d.h));
+    if (big / small > 2.5) return;            // 크기가 많이 다르면 다른 사람(가까운 사람 ↔ 먼 사람)
+    var reach = Math.max(small * 0.9, diag * 0.05) * Math.min(3, Math.max(1, dt / 250));  // 분석이 느릴수록 넓게
+    if (dist < reach) pairs.push([dist, ti, di]);
   }); });
   pairs.sort(function(a, b){ return a[0] - b[0]; });
   var tUsed = {};
@@ -375,14 +450,43 @@ function track(people){
     var t = tracks[p[1]], d = dets[p[2]];
     if (tUsed[p[1]] || d.used) return;
     tUsed[p[1]] = true; d.used = true;
-    t.cx = d.cx; t.cy = d.cy; t.seen = now; checkCross(t, W, H);
+    var el = Math.max(1, now - t.seen), k = t.hits ? 0.5 : 1;
+    t.vx += ((d.cx - t.cx) / el - t.vx) * k; t.vy += ((d.cy - t.cy) / el - t.vy) * k; t.hits++;
+    t.cx = d.cx; t.cy = d.cy; t.h = d.h; t.seen = now;
+    t.trail.push(d.cx, d.cy); if (t.trail.length > 24) t.trail.splice(0, 2);
+    if (S.mode === 'p') checkPass(t, diag); else checkCross(t, W, H);
   });
   dets.forEach(function(d){
     if (d.used) return;
-    var t = { id:nextId++, cx:d.cx, cy:d.cy, seen:now, side:0 };
-    t.side = sideOf(t, W, H); tracks.push(t);
+    var t = { id:nextId++, cx:d.cx, cy:d.cy, h:d.h, seen:now, side:0, vx:0, vy:0, hits:0, trail:[d.cx, d.cy],
+              bx:d.cx, by:d.cy, counted:false };
+    t.side = sideOf(t, W, H);
+    // 추적이 끊겼다가 근처에서 다시 잡힌 사람이면 이전 기록을 이어받아 중복 카운트를 막는다
+    var best = -1, bd = Math.max(d.h * 1.2, diag * 0.08);
+    tracks.forEach(function(o, oi){
+      if (o.seen === now) return;
+      var big = Math.max(o.h, d.h), small = Math.max(1, Math.min(o.h, d.h));
+      var dd = Math.hypot(o.cx - d.cx, o.cy - d.cy);
+      if (big / small <= 2.5 && dd < bd){ bd = dd; best = oi; }
+    });
+    if (best >= 0){
+      var o = tracks[best];
+      t.id = o.id; t.counted = o.counted; t.bx = o.bx; t.by = o.by; t.hits = o.hits; if (o.side) t.side = o.side;
+      t.trail = o.trail.concat(t.trail).slice(-24); tracks.splice(best, 1);
+      if (S.mode === 'l') checkCross(t, W, H);
+    }
+    tracks.push(t);
   });
-  tracks = tracks.filter(function(t){ return now - t.seen < 1200; });
+  tracks = tracks.filter(function(t){ return now - t.seen < 2000; });
+}
+/* 자동 방식: 사람 한 명당 한 번. 3회 이상 연속 인식되고 실제로 이동한 사람만 센다(서 있는 사람 제외) */
+function checkPass(t, diag){
+  if (t.counted || t.hits < 3) return;
+  var dx = t.cx - t.bx, dy = t.cy - t.by;
+  if (Math.hypot(dx, dy) < Math.max(t.h * 0.5, diag * 0.05)) return;
+  t.counted = true;
+  events.push(dx >= 0 ? Date.now() : -Date.now());
+  saveSoon(); renderTiles();
 }
 function sideOf(t, W, H){
   var dim = S.ori === 'v' ? W : H, p = S.ori === 'v' ? t.cx : t.cy;
@@ -404,15 +508,27 @@ function drawOverlay(people){
   var W = overlay.width, H = overlay.height; if (!W) return;
   octx.clearRect(0, 0, W, H);
   var hot = performance.now() - flash < 300;
-  octx.strokeStyle = hot ? '#ffffff' : '#ffb454'; octx.lineWidth = Math.max(3, W / 160);
-  octx.beginPath();
-  if (S.ori === 'v'){ var x = W * S.pos / 100; octx.moveTo(x, 0); octx.lineTo(x, H); }
-  else { var y = H * S.pos / 100; octx.moveTo(0, y); octx.lineTo(W, y); }
-  octx.stroke();
-  octx.strokeStyle = '#5b9dff'; octx.lineWidth = Math.max(2, W / 240);
+  if (S.mode === 'l'){
+    octx.strokeStyle = hot ? '#ffffff' : '#ffb454'; octx.lineWidth = Math.max(3, W / 160);
+    octx.beginPath();
+    if (S.ori === 'v'){ var x = W * S.pos / 100; octx.moveTo(x, 0); octx.lineTo(x, H); }
+    else { var y0 = H * S.pos / 100; octx.moveTo(0, y0); octx.lineTo(W, y0); }
+    octx.stroke();
+  }
+  octx.strokeStyle = 'rgba(91,157,255,.55)'; octx.lineWidth = Math.max(1.5, W / 420);
   people.forEach(function(p){ octx.strokeRect(p.bbox[0], p.bbox[1], p.bbox[2], p.bbox[3]); });
-  octx.fillStyle = '#5b9dff';
-  tracks.forEach(function(t){ octx.beginPath(); octx.arc(t.cx, t.cy, Math.max(4, W / 120), 0, 6.283); octx.fill(); });
+  var r = Math.max(6, Math.max(W, H) / 90);
+  tracks.forEach(function(t){
+    octx.strokeStyle = 'rgba(57,255,136,.6)'; octx.lineWidth = r * 0.35; octx.beginPath();
+    for (var i = 0; i < t.trail.length; i += 2){ if (i) octx.lineTo(t.trail[i], t.trail[i+1]); else octx.moveTo(t.trail[i], t.trail[i+1]); }
+    octx.stroke();
+    var y = Math.max(r + 2, t.cy - r * 1.6);   // 머리 바로 위
+    octx.beginPath(); octx.arc(t.cx, y, r, 0, 6.283);
+    octx.fillStyle = (S.mode === 'p' && !t.counted) ? '#ffd23f' : '#39ff88'; octx.fill();
+    octx.lineWidth = Math.max(2, r * 0.3); octx.strokeStyle = '#06142b'; octx.stroke();
+    octx.font = 'bold ' + Math.round(r * 2.2) + 'px sans-serif'; octx.textBaseline = 'middle';
+    octx.strokeText(t.id, t.cx + r * 1.4, y); octx.fillStyle = '#ffffff'; octx.fillText(t.id, t.cx + r * 1.4, y);
+  });
 }
 
 /* ---------- 시작 ---------- */
