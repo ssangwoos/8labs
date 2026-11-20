@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>유동인구 카운터</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#191c23; --line:#2a2e38; --text:#eef0f4; --sub:#9aa1ae;
+    --accent:#5b9dff; --warn:#ffb454; --bad:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+  .wrap{max-width:720px;margin:0 auto;padding:12px 12px 40px}
+  h1{font-size:18px;margin:4px 0 10px;font-weight:700}
+  h2{font-size:14px;margin:0 0 10px;font-weight:700;color:var(--sub)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+  .stage{position:relative;background:#000;border-radius:10px;overflow:hidden;min-height:180px}
+  .stage video,.stage canvas{display:block;width:100%;height:auto}
+  .stage canvas{position:absolute;left:0;top:0}
+  .placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--sub);text-align:center;padding:16px;font-size:14px}
+  .status{font-size:13px;color:var(--sub);margin-top:8px;min-height:19px}
+  .status.err{color:var(--bad)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  button{font:inherit;color:var(--text);background:#262a34;border:1px solid var(--line);
+    border-radius:10px;padding:11px 14px;cursor:pointer;flex:1 1 auto;min-width:96px}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#06142b;font-weight:700}
+  button.danger{color:var(--bad)}
+  button:disabled{opacity:.5}
+  .big{display:flex;align-items:baseline;gap:10px}
+  .big .num{font-size:56px;font-weight:800;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1}
+  .big .lab{color:var(--sub)}
+  .dirs{display:flex;gap:16px;margin-top:8px;color:var(--sub);font-size:14px}
+  .dirs b{color:var(--text);font-variant-numeric:tabular-nums}
+  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .tile{background:#12151b;border:1px solid var(--line);border-radius:10px;padding:10px}
+  .tile .t{font-size:12px;color:var(--sub)}
+  .tile .v{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+  .tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px}
+  .tabs button{flex:0 0 auto;min-width:0;padding:7px 12px;font-size:13px;border-radius:999px}
+  .tabs button.on{background:var(--accent);border-color:var(--accent);color:#06142b;font-weight:700}
+  #chart{width:100%;height:200px;display:block;touch-action:manipulation}
+  .tip{font-size:13px;color:var(--sub);min-height:19px;margin-top:6px}
+  label.opt{display:block;margin-top:12px;font-size:13px;color:var(--sub)}
+  label.opt span{color:var(--text);float:right;font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;margin-top:6px}
+  .seg{display:flex;gap:6px;margin-top:6px}
+  .seg button{padding:9px 10px;font-size:13px}
+  .seg button.on{border-color:var(--accent);color:var(--accent)}
+  .note{font-size:12px;color:var(--sub);margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>유동인구 카운터</h1>
+
+  <div class="card">
+    <div class="stage" id="stage">
+      <video id="video" playsinline muted autoplay></video>
+      <canvas id="overlay"></canvas>
+      <div class="placeholder" id="placeholder">버튼을 눌러도 반응이 없으면 파일로 직접 연 상태입니다.<br>https 주소로 올린 뒤 Safari·Chrome에서 열어 주세요.</div>
+    </div>
+    <div class="status" id="status">대기 중</div>
+    <div class="row">
+      <button class="primary" id="btnStart">카메라 시작</button>
+      <button id="btnFlip">카메라 전환</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="big"><div class="num" id="today">0</div><div class="lab">명 · 오늘 누적</div></div>
+    <div class="dirs">
+      <div><span id="dirALabel">→</span> <b id="dirA">0</b></div>
+      <div><span id="dirBLabel">←</span> <b id="dirB">0</b></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>최근 구간별 통행량</h2>
+    <div class="tiles">
+      <div class="tile"><div class="t">최근 1분</div><div class="v" id="w0">0</div></div>
+      <div class="tile"><div class="t">최근 10분</div><div class="v" id="w1">0</div></div>
+      <div class="tile"><div class="t">최근 1시간</div><div class="v" id="w2">0</div></div>
+      <div class="tile"><div class="t">최근 6시간</div><div class="v" id="w3">0</div></div>
+      <div class="tile"><div class="t">최근 12시간</div><div class="v" id="w4">0</div></div>
+      <div class="tile"><div class="t">최근 24시간</div><div class="v" id="w5">0</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>단위별 추이</h2>
+    <div class="tabs" id="tabs"></div>
+    <canvas id="chart"></canvas>
+    <div class="tip" id="tip">막대를 누르면 해당 구간 수치가 보입니다</div>
+  </div>
+
+  <div class="card">
+    <h2>설정</h2>
+    <div class="seg" id="segOri">
+      <button data-v="v">세로선 (좌우로 지나감)</button>
+      <button data-v="h">가로선 (위아래로 지나감)</button>
+    </div>
+    <label class="opt">선 위치 <span id="posVal"></span>
+      <input type="range" id="pos" min="10" max="90" step="1">
+    </label>
+    <label class="opt">인식 민감도 (낮출수록 더 많이 잡음) <span id="scoreVal"></span>
+      <input type="range" id="score" min="30" max="80" step="5">
+    </label>
+    <div class="row">
+      <button id="btnCsv">CSV 내보내기</button>
+      <button class="danger" id="btnReset">데이터 초기화</button>
+    </div>
+    <div class="note">영상은 저장하거나 전송하지 않고, 이 기기 안에서만 분석해 통과 시각(숫자)만 기록합니다. 화면이 꺼지거나 다른 앱으로 넘어가면 카운팅이 멈춥니다.</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<script>
+(function(){
+'use strict';
+var $ = function(id){ return document.getElementById(id); };
+var MIN = 60000, HOUR = 3600000, DAY = 86400000;
+var KEY_EV = 'pc_events_v1', KEY_SET = 'pc_settings_v1';
+var KEEP_MS = 30 * DAY, MAX_EVENTS = 200000;
+
+/* ---------- 저장 데이터 ---------- */
+// events: 시간순 정렬된 숫자 배열. 양수 = A방향(→/↓), 음수 = B방향(←/↑). 절댓값 = 통과 시각(ms)
+var events = [];
+var S = { ori:'v', pos:50, score:50, facing:'environment', unit:1 };
+try { var e0 = JSON.parse(localStorage.getItem(KEY_EV) || '[]'); if (Array.isArray(e0)) events = e0; } catch(e){}
+try { var s0 = JSON.parse(localStorage.getItem(KEY_SET) || '{}'); for (var k in s0) if (k in S) S[k] = s0[k]; } catch(e){}
+
+var saveTimer = null;
+function saveNow(){
+  saveTimer = null;
+  var cut = Date.now() - KEEP_MS, i = lowerBound(cut);
+  if (i > 0) events.splice(0, i);
+  if (events.length > MAX_EVENTS) events.splice(0, events.length - MAX_EVENTS);
+  try { localStorage.setItem(KEY_EV, JSON.stringify(events)); } catch(e){}
+}
+function saveSoon(){ if (!saveTimer) saveTimer = setTimeout(saveNow, 3000); }
+function saveSettings(){ try { localStorage.setItem(KEY_SET, JSON.stringify(S)); } catch(e){} }
+window.addEventListener('pagehide', saveNow);
+document.addEventListener('visibilitychange', function(){
+  if (document.hidden) saveNow(); else if (running) requestWake();
+});
+
+function lowerBound(ts){            // |events[i]| >= ts 인 첫 인덱스
+  var lo = 0, hi = events.length;
+  while (lo < hi){ var m = (lo + hi) >> 1; if (Math.abs(events[m]) < ts) lo = m + 1; else hi = m; }
+  return lo;
+}
+function countSince(ts){ return events.length - lowerBound(ts); }
+
+/* ---------- 대시보드 ---------- */
+var WINDOWS = [MIN, 10*MIN, HOUR, 6*HOUR, 12*HOUR, DAY];
+var UNITS = [
+  {name:'1분',   ms:MIN,      n:30},
+  {name:'10분',  ms:10*MIN,   n:36},
+  {name:'1시간', ms:HOUR,     n:24},
+  {name:'6시간', ms:6*HOUR,   n:28},
+  {name:'12시간',ms:12*HOUR,  n:14},
+  {name:'24시간',ms:DAY,      n:14}
+];
+function tzOff(){ return new Date().getTimezoneOffset() * MIN; }
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+function fmtBucket(ts, ms){
+  var d = new Date(ts);
+  if (ms < HOUR)  return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  if (ms === HOUR) return pad(d.getHours()) + '시';
+  if (ms < DAY)   return (d.getMonth()+1) + '/' + d.getDate() + ' ' + pad(d.getHours()) + '시';
+  return (d.getMonth()+1) + '/' + d.getDate();
+}
+function buckets(unit){             // 시계 기준으로 정렬된 최근 n개 구간
+  var off = tzOff(), now = Date.now();
+  var lastIdx = Math.floor((now - off) / unit.ms), firstIdx = lastIdx - unit.n + 1;
+  var out = [];
+  for (var i = 0; i < unit.n; i++) out.push({ start:(firstIdx + i) * unit.ms + off, a:0, b:0 });
+  for (var j = lowerBound(out[0].start); j < events.length; j++){
+    var v = events[j], idx = Math.floor((Math.abs(v) - off) / unit.ms) - firstIdx;
+    if (idx >= 0 && idx < unit.n){ if (v > 0) out[idx].a++; else out[idx].b++; }
+  }
+  return out;
+}
+
+function renderTiles(){
+  var now = Date.now();
+  for (var i = 0; i < WINDOWS.length; i++) $('w' + i).textContent = countSince(now - WINDOWS[i]).toLocaleString();
+  var d = new Date(); d.setHours(0,0,0,0);
+  var a = 0, b = 0;
+  for (var j = lowerBound(d.getTime()); j < events.length; j++){ if (events[j] > 0) a++; else b++; }
+  $('today').textContent = (a + b).toLocaleString();
+  $('dirA').textContent = a.toLocaleString();
+  $('dirB').textContent = b.toLocaleString();
+}
+
+var chartData = [], chartGeom = null, selBar = -1;
+function renderChart(){
+  var unit = UNITS[S.unit], data = buckets(unit); chartData = data;
+  var cv = $('chart'), dpr = window.devicePixelRatio || 1;
+  var W = cv.clientWidth, H = cv.clientHeight;
+  if (!W) return;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  var g = cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  var padL = 34, padR = 6, padT = 10, padB = 22, pw = W - padL - padR, ph = H - padT - padB;
+  var max = 1; data.forEach(function(d){ max = Math.max(max, d.a + d.b); });
+  var step = Math.pow(10, Math.floor(Math.log10(max)));          // 보기 좋은 눈금
+  var top = Math.ceil(max / step) * step; if (top / step > 5) { step *= 2; top = Math.ceil(max / step) * step; }
+  g.font = '11px sans-serif'; g.textBaseline = 'middle';
+  for (var y = 0; y <= top; y += step){
+    var py = padT + ph - (y / top) * ph;
+    g.strokeStyle = '#2a2e38'; g.lineWidth = 1; g.beginPath(); g.moveTo(padL, py + .5); g.lineTo(W - padR, py + .5); g.stroke();
+    g.fillStyle = '#9aa1ae'; g.textAlign = 'right'; g.fillText(String(y), padL - 6, py);
+  }
+  var bw = pw / data.length, gap = Math.min(3, bw * 0.2);
+  data.forEach(function(d, i){
+    var v = d.a + d.b, h = (v / top) * ph, x = padL + i * bw + gap / 2;
+    g.fillStyle = (i === selBar) ? '#ffffff' : (i === data.length - 1 ? '#8fbcff' : '#5b9dff');
+    if (v > 0) g.fillRect(x, padT + ph - Math.max(h, 2), bw - gap, Math.max(h, 2));
+  });
+  g.fillStyle = '#9aa1ae'; g.textBaseline = 'alphabetic';
+  [0, Math.floor(data.length / 2), data.length - 1].forEach(function(i, n){
+    g.textAlign = n === 0 ? 'left' : (n === 2 ? 'right' : 'center');
+    var x = n === 0 ? padL : (n === 2 ? W - padR : padL + (i + .5) * bw);
+    g.fillText(fmtBucket(data[i].start, unit.ms), x, H - 6);
+  });
+  chartGeom = { padL:padL, bw:bw, n:data.length };
+  if (selBar >= 0 && data[selBar]) showTip(selBar);
+}
+function showTip(i){
+  var d = chartData[i], unit = UNITS[S.unit], L = dirLabels();
+  $('tip').textContent = fmtBucket(d.start, unit.ms) + ' 부터 ' + unit.name + ' : ' + (d.a + d.b) + '명  (' + L[0] + ' ' + d.a + ' · ' + L[1] + ' ' + d.b + ')';
+}
+$('chart').addEventListener('click', function(ev){
+  if (!chartGeom) return;
+  var r = this.getBoundingClientRect(), i = Math.floor((ev.clientX - r.left - chartGeom.padL) / chartGeom.bw);
+  if (i < 0 || i >= chartGeom.n) return;
+  selBar = i; renderChart();
+});
+
+var tabs = $('tabs');
+UNITS.forEach(function(u, i){
+  var b = document.createElement('button'); b.textContent = u.name;
+  b.onclick = function(){ S.unit = i; selBar = -1; saveSettings(); syncUI(); renderChart();
+    $('tip').textContent = '막대를 누르면 해당 구간 수치가 보입니다'; };
+  tabs.appendChild(b);
+});
+
+/* ---------- 설정 UI ---------- */
+function dirLabels(){ return S.ori === 'v' ? ['→ 오른쪽', '← 왼쪽'] : ['↓ 아래', '↑ 위']; }
+function syncUI(){
+  [].forEach.call(tabs.children, function(b, i){ b.className = i === S.unit ? 'on' : ''; });
+  [].forEach.call($('segOri').children, function(b){ b.className = b.dataset.v === S.ori ? 'on' : ''; });
+  $('pos').value = S.pos; $('posVal').textContent = S.pos + '%';
+  $('score').value = S.score; $('scoreVal').textContent = S.score + '%';
+  var L = dirLabels(); $('dirALabel').textContent = L[0]; $('dirBLabel').textContent = L[1];
+}
+[].forEach.call($('segOri').children, function(b){
+  b.onclick = function(){ S.ori = b.dataset.v; tracks = []; saveSettings(); syncUI(); drawOverlay([]); };
+});
+$('pos').oninput = function(){ S.pos = +this.value; tracks.forEach(function(t){ t.side = 0; }); saveSettings(); syncUI(); drawOverlay([]); };
+$('score').oninput = function(){ S.score = +this.value; saveSettings(); syncUI(); };
+
+$('btnReset').onclick = function(){
+  if (!confirm('저장된 카운트 데이터를 모두 지울까요?')) return;
+  events = []; saveNow(); renderTiles(); renderChart();
+};
+$('btnCsv').onclick = function(){
+  var unit = UNITS[S.unit], off = tzOff(), map = {}, keys = [];
+  events.forEach(function(v){
+    var k = Math.floor((Math.abs(v) - off) / unit.ms);
+    if (!map[k]) { map[k] = [0,0]; keys.push(k); }
+    map[k][v > 0 ? 0 : 1]++;
+  });
+  var L = dirLabels(), rows = ['구간시작,합계,' + L[0] + ',' + L[1]];
+  keys.forEach(function(k){
+    var d = new Date(k * unit.ms + off);
+    var s = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    rows.push(s + ',' + (map[k][0] + map[k][1]) + ',' + map[k][0] + ',' + map[k][1]);
+  });
+  var blob = new Blob(['﻿' + rows.join('\n')], {type:'text/csv;charset=utf-8'});
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = '유동인구_' + unit.name + '단위.csv'; document.body.appendChild(a); a.click(); a.remove();
+};
+
+/* ---------- 카메라 + 사람 인식 ---------- */
+var video = $('video'), overlay = $('overlay'), octx = overlay.getContext('2d');
+var model = null, stream = null, running = false, busy = false, wake = null;
+var tracks = [], nextId = 1, fps = 0, lastT = 0;
+
+function setStatus(msg, err){ var el = $('status'); el.textContent = msg; el.className = 'status' + (err ? ' err' : ''); }
+function requestWake(){
+  if (navigator.wakeLock && navigator.wakeLock.request)
+    navigator.wakeLock.request('screen').then(function(w){ wake = w; }).catch(function(){});
+}
+function stopStream(){ if (stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; } }
+
+var SECURE = window.isSecureContext && location.protocol === 'https:' || location.hostname === 'localhost';
+var NOT_SECURE_MSG = '파일로 직접 열면 브라우저가 카메라를 막습니다. https 주소(예: 8labs.kr)에 올린 뒤 Safari·Chrome에서 열어 주세요.';
+$('placeholder').innerHTML = SECURE ? '아래 [카메라 시작]을 누르면<br>화면의 선을 넘어가는 사람을 셉니다' : NOT_SECURE_MSG;
+async function start(){
+  if (!SECURE || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    setStatus(NOT_SECURE_MSG, true); return;
+  }
+  $('btnStart').disabled = true;
+  try {
+    if (!model){
+      if (!window.cocoSsd) throw new Error('인식 엔진을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.');
+      setStatus('사람 인식 모델 불러오는 중… (처음 한 번, 수 초 걸립니다)');
+      model = await cocoSsd.load({ base:'lite_mobilenet_v2' });
+    }
+    setStatus('카메라 여는 중…');
+    stopStream();
+    stream = await navigator.mediaDevices.getUserMedia({ audio:false,
+      video:{ facingMode:{ ideal:S.facing }, width:{ ideal:640 }, height:{ ideal:480 } } });
+    video.srcObject = stream; await video.play();
+    $('placeholder').style.display = 'none';
+    tracks = []; running = true; requestWake();
+    $('btnStart').textContent = '정지'; setStatus('카운팅 중');
+    requestAnimationFrame(loop);
+  } catch(e){
+    running = false; stopStream();
+    var m = e && e.name === 'NotAllowedError' ? '카메라 권한이 거부되었습니다. 주소창 왼쪽 아이콘 → 사이트 설정에서 카메라를 허용해 주세요. (카카오톡 등 앱 안 브라우저에서는 안 될 수 있으니 Safari·Chrome으로 열어 주세요)'
+          : e && e.name === 'NotFoundError' ? '사용할 수 있는 카메라가 없습니다.'
+          : '시작 실패: ' + (e && e.message ? e.message : e);
+    setStatus(m, true);
+  }
+  $('btnStart').disabled = false;
+}
+function stop(){
+  running = false; stopStream(); tracks = [];
+  if (wake){ try { wake.release(); } catch(e){} wake = null; }
+  $('btnStart').textContent = '카메라 시작'; setStatus('정지됨'); saveNow();
+  octx.clearRect(0, 0, overlay.width, overlay.height);
+}
+$('btnStart').onclick = function(){ if (running) stop(); else start(); };
+$('btnFlip').onclick = function(){
+  S.facing = S.facing === 'environment' ? 'user' : 'environment'; saveSettings();
+  if (running){ running = false; start(); }
+};
+
+async function loop(){
+  if (!running) return;
+  if (!busy && video.readyState >= 2 && video.videoWidth){
+    busy = true;
+    try {
+      if (overlay.width !== video.videoWidth){ overlay.width = video.videoWidth; overlay.height = video.videoHeight; }
+      var preds = await model.detect(video, 20, S.score / 100);
+      var people = preds.filter(function(p){ return p.class === 'person'; });
+      if (running){ track(people); drawOverlay(people); }
+      var t = performance.now(); if (lastT) fps = fps * 0.8 + (1000 / (t - lastT)) * 0.2; lastT = t;
+      setStatus('카운팅 중 · 화면 내 ' + people.length + '명 · 초당 ' + fps.toFixed(1) + '회 분석');
+    } catch(e){ setStatus('분석 오류: ' + e.message, true); }
+    busy = false;
+  }
+  requestAnimationFrame(loop);
+}
+
+/* 사람별로 위치를 이어 붙여 추적하고, 선을 넘어가면 1명으로 센다 */
+function track(people){
+  var W = overlay.width, H = overlay.height, now = performance.now();
+  var maxDist = Math.sqrt(W*W + H*H) * 0.2;
+  var dets = people.map(function(p){ return { cx:p.bbox[0] + p.bbox[2]/2, cy:p.bbox[1] + p.bbox[3]/2, used:false }; });
+  var pairs = [];
+  tracks.forEach(function(t, ti){ dets.forEach(function(d, di){
+    var dist = Math.hypot(t.cx - d.cx, t.cy - d.cy); if (dist < maxDist) pairs.push([dist, ti, di]);
+  }); });
+  pairs.sort(function(a, b){ return a[0] - b[0]; });
+  var tUsed = {};
+  pairs.forEach(function(p){
+    var t = tracks[p[1]], d = dets[p[2]];
+    if (tUsed[p[1]] || d.used) return;
+    tUsed[p[1]] = true; d.used = true;
+    t.cx = d.cx; t.cy = d.cy; t.seen = now; checkCross(t, W, H);
+  });
+  dets.forEach(function(d){
+    if (d.used) return;
+    var t = { id:nextId++, cx:d.cx, cy:d.cy, seen:now, side:0 };
+    t.side = sideOf(t, W, H); tracks.push(t);
+  });
+  tracks = tracks.filter(function(t){ return now - t.seen < 1200; });
+}
+function sideOf(t, W, H){
+  var dim = S.ori === 'v' ? W : H, p = S.ori === 'v' ? t.cx : t.cy;
+  var line = dim * S.pos / 100, margin = dim * 0.02;
+  return p < line - margin ? -1 : (p > line + margin ? 1 : 0);
+}
+function checkCross(t, W, H){
+  var s = sideOf(t, W, H);
+  if (s === 0) return;
+  if (t.side !== 0 && s !== t.side){
+    events.push(s > 0 ? Date.now() : -Date.now());
+    flash = performance.now(); saveSoon(); renderTiles();
+  }
+  t.side = s;
+}
+
+var flash = 0;
+function drawOverlay(people){
+  var W = overlay.width, H = overlay.height; if (!W) return;
+  octx.clearRect(0, 0, W, H);
+  var hot = performance.now() - flash < 300;
+  octx.strokeStyle = hot ? '#ffffff' : '#ffb454'; octx.lineWidth = Math.max(3, W / 160);
+  octx.beginPath();
+  if (S.ori === 'v'){ var x = W * S.pos / 100; octx.moveTo(x, 0); octx.lineTo(x, H); }
+  else { var y = H * S.pos / 100; octx.moveTo(0, y); octx.lineTo(W, y); }
+  octx.stroke();
+  octx.strokeStyle = '#5b9dff'; octx.lineWidth = Math.max(2, W / 240);
+  people.forEach(function(p){ octx.strokeRect(p.bbox[0], p.bbox[1], p.bbox[2], p.bbox[3]); });
+  octx.fillStyle = '#5b9dff';
+  tracks.forEach(function(t){ octx.beginPath(); octx.arc(t.cx, t.cy, Math.max(4, W / 120), 0, 6.283); octx.fill(); });
+}
+
+/* ---------- 시작 ---------- */
+syncUI(); renderTiles(); renderChart();
+setInterval(renderTiles, 1000);
+setInterval(renderChart, 5000);
+window.addEventListener('resize', renderChart);
+})();
+</script>
+</body>
+</html>
