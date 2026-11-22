@@ -95,6 +95,46 @@
   .badge.bad{color:var(--bad);border-color:#efc0bc;background:#fdf1f0}
   .good{color:var(--good);font-weight:700}.badc{color:var(--bad);font-weight:700}
   .status{font-size:13px;color:var(--sub)}
+  @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+  :root{--bg:#f3f2f7;--line:#e2e0ea;--ink:#17141c;--sub:#6a6674}
+  body{font-family:"Pretendard Variable","Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+  .intro{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);grid-template-areas:"head phone" "lede phone" "form phone" "steps steps";column-gap:48px;row-gap:0;padding:36px 4px 40px;align-items:start}
+  .headline{grid-area:head;word-break:keep-all;margin:0;font-size:clamp(32px,8.6vw,58px);line-height:1.13;font-weight:800;letter-spacing:-.035em;color:var(--ink)}
+  .lede{grid-area:lede;word-break:keep-all;margin:18px 0 28px;font-size:17px;line-height:1.6;color:var(--sub);max-width:30em}
+  .phone{grid-area:phone;grid-row:1 / span 3;justify-self:center;align-self:center;width:min(100%,250px);aspect-ratio:9/18.5;border-radius:38px;background:#17141c;padding:11px;box-shadow:0 30px 60px -28px rgba(60,30,90,.55)}
+  .phone-screen{width:100%;height:100%;border-radius:28px;display:flex;align-items:center;justify-content:center;background:#fff;color:#17141c;animation:lights 7s infinite}
+  .phone-screen svg{width:74%;opacity:.6}
+  @keyframes lights{0%,21%{background:#fff;color:#17141c}25%,46%{background:#ff2a1f;color:#fff}50%,71%{background:#19e23c;color:#0b3d14}75%,96%{background:#2433ff;color:#fff}100%{background:#fff;color:#17141c}}
+  @media (prefers-reduced-motion: reduce){.phone-screen{animation:none}}
+  .intro-form{grid-area:form;background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px}
+  .intro-form label,.intro-form .lab{display:block;font-size:13px;font-weight:700;color:var(--ink);margin:0 0 6px}
+  .intro-form input[type=text],.intro-form input[type=number]{width:100%;margin:0 0 16px;padding:14px;border:1.5px solid var(--line);border-radius:12px;font:inherit;font-size:16px;background:#faf9fc;color:var(--ink)}
+  .intro-form input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  .two{display:grid;grid-template-columns:110px 1fr;gap:14px}
+  .gseg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px}
+  .gseg label{margin:0;cursor:pointer}
+  .gseg input{position:absolute;opacity:0}
+  .gseg span{display:block;text-align:center;padding:14px 0;border:1.5px solid var(--line);border-radius:12px;font-size:16px;font-weight:600;color:var(--sub);background:#faf9fc}
+  .gseg input:checked+span{background:var(--accent);border-color:var(--accent);color:#fff}
+  .gseg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+  .ferr{margin:0 0 10px;min-height:0;font-size:14px;font-weight:600;color:var(--bad)}
+  .go{width:100%;appearance:none;border:0;border-radius:14px;padding:17px;font:inherit;font-size:18px;font-weight:800;color:#fff;background:var(--accent);cursor:pointer}
+  .go:active{transform:translateY(1px)}
+  .fine{margin:12px 0 0;font-size:13px;line-height:1.5;color:var(--sub)}
+  .steps{grid-area:steps;list-style:none;counter-reset:st;margin:32px 0 0;padding:24px 0 0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .steps li{counter-increment:st;font-size:15px;line-height:1.55;color:var(--sub)}
+  .steps li::before{content:counter(st);display:block;font-size:34px;font-weight:800;letter-spacing:-.03em;color:var(--accent);line-height:1;margin-bottom:10px}
+  .steps b{display:block;color:var(--ink);font-size:17px;margin-bottom:4px}
+  .brm{display:none}
+  @media(max-width:760px){
+    .intro{grid-template-columns:minmax(0,1fr) 104px;grid-template-areas:"head phone" "lede lede" "form form" "steps steps";column-gap:14px;padding-top:18px}
+    .brm{display:inline}.headline{font-size:clamp(28px,8vw,36px);align-self:center}
+    .lede{font-size:16px;margin:16px 0 22px}
+    .phone{grid-row:auto;width:104px;border-radius:20px;padding:5px;box-shadow:0 18px 30px -18px rgba(60,30,90,.55)}.phone-screen{border-radius:15px}
+    .steps{grid-template-columns:1fr;gap:18px}
+    .steps li{display:grid;grid-template-columns:40px 1fr;column-gap:6px}.steps li::before{grid-row:1 / span 2;margin:0}.steps b{margin:0}
+  }
+  .who{font-size:13px;font-weight:700;color:var(--accent)}
   .hide{display:none!important}
   .sharebox{display:grid;grid-template-columns:240px 1fr;gap:20px;align-items:start}
   @media(max-width:600px){.sharebox{grid-template-columns:1fr}.sharebox canvas{max-width:260px;margin:0 auto}}
@@ -153,7 +193,7 @@
 </head>
 <body>
 <header>
-  <div class="hd"><h1>AI 피부 분석</h1><span class="ver">사진은 이 기기 안에서만 분석되며 어디에도 저장·전송되지 않습니다</span></div>
+  <div class="hd" style="padding-bottom:12px"><h1>EIGHT 피부 분석</h1><span class="who" id="who"></span></div>
 </header>
 
 <div class="light" id="light" aria-live="polite">
@@ -174,6 +214,37 @@
 <!-- ───────── 측정 ───────── -->
 <section id="tabM">
   <div class="card hide" id="sharedCard"></div>
+  <div class="intro" id="intro">
+    <h2 class="headline">화면 불빛 <br class="brm">네 번이면 <br>피부 리포트가 <br class="brm">나옵니다</h2>
+    <p class="lede">휴대폰 화면이 흰색, 빨강, 초록, 파랑으로 바뀌는 동안 사진 네 장을 찍고, 모공부터 윤기까지 여섯 가지를 점수로 알려 드립니다.</p>
+    <div class="phone" aria-hidden="true">
+      <div class="phone-screen">
+        <svg viewBox="0 0 100 100"><path d="M50 6 C71 6 83 22 83 44 C83 68 69 95 50 95 C31 95 17 68 17 44 C17 22 29 6 50 6 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray="9 6" vector-effect="non-scaling-stroke"/><path d="M22 43H42M58 43H78" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+      </div>
+    </div>
+    <form class="intro-form" onsubmit="startMeasure(event)" novalidate>
+      <label for="pNick">닉네임</label>
+      <input type="text" id="pNick" maxlength="12" placeholder="리포트에 표시될 이름" autocomplete="nickname">
+      <div class="two">
+        <div><label for="pAge">나이</label><input type="number" id="pAge" min="1" max="99" inputmode="numeric" placeholder="만 나이"></div>
+        <div><span class="lab" id="gLab">성별</span>
+          <div class="gseg" role="radiogroup" aria-labelledby="gLab">
+            <label><input type="radio" name="pSex" value="여성"><span>여성</span></label>
+            <label><input type="radio" name="pSex" value="남성"><span>남성</span></label>
+            <label><input type="radio" name="pSex" value=""><span>비공개</span></label>
+          </div></div>
+      </div>
+      <p class="ferr" id="pErr" role="alert"></p>
+      <button class="go" type="submit">측정 시작하기</button>
+      <p class="fine">사진과 입력한 정보는 이 휴대폰 안에서만 쓰이고, 어디에도 저장되거나 전송되지 않습니다.</p>
+    </form>
+    <ol class="steps">
+      <li><b>얼굴 맞추기</b>화면 속 점선 타원에 얼굴을, 가로선에 눈을 맞춥니다.</li>
+      <li><b>10초 가만히</b>화면 색이 네 번 바뀌는 동안 움직이지 않습니다. 화면 밝기는 최대로 올려 주세요.</li>
+      <li><b>리포트 받기</b>여섯 항목의 점수와 등급을 확인하고 인스타그램으로 보냅니다.</li>
+    </ol>
+  </div>
+
   <div class="card hide">
     <h2>1. 측정 정보</h2>
     <div class="grid">
@@ -183,7 +254,7 @@
     </div>
   </div>
 
-  <div class="card" id="capCard">
+  <div class="card hide" id="capCard">
     <h2>촬영</h2>
     <div class="row">
       <button class="btn pri" id="bCam" onclick="startCam()">전면 카메라 켜기</button>
@@ -214,6 +285,7 @@
       <input type="range" id="fSize" min="10" max="100" value="90" oninput="roiSize(this.value)" style="width:180px">
       <button class="btn pri" onclick="analyzeFile()">이 영역 분석</button>
     </div>
+    <p class="badge warn hide" id="inapp" style="display:block;border-radius:10px;padding:10px 12px;margin:12px 0 0;white-space:normal"></p>
     <p class="hint" id="lmMsg" style="font-weight:600">얼굴 인식 모델을 불러오는 중…</p>
     <p class="hint" id="camMsg">촬영 요령: 화면 밝기를 최대로 하고 주변은 조금 어둡게 합니다. 앞머리를 올리고 정면을 본 채, 얼굴 윤곽이 점선 타원에 맞고 두 눈이 가로선에 오도록 거리를 조절해 찍습니다. 촬영 중에는 화면이 조명 역할을 하니 움직이지 않습니다. 피부 영역은 자동으로 찾습니다. 전후 촬영은 같은 자리, 같은 조명, 같은 거리에서 진행합니다.</p>
   </div>
@@ -663,13 +735,15 @@ let current = null, stream = null, facing = "user", fileImg = null, roi = { cx: 
 $("legend").style.background = "linear-gradient(90deg," + STOPS.map(s => `rgb(${s[1]},${s[2]},${s[3]}) ${(s[0] + 1) * 50}%`).join(",") + ")";
 
 // ── 카메라
+const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+if (/Instagram|KAKAOTALK|FBAN|FBAV|Line\//i.test(navigator.userAgent)) { const e = $("inapp"); if (e) { e.classList.remove("hide"); e.textContent = "인스타그램·카카오톡 안에서 열면 카메라나 공유가 막힐 수 있습니다. 화면 위쪽 메뉴(⋯)에서 'Safari로 열기' 또는 '다른 브라우저로 열기'를 눌러 주세요."; } }
 async function startCam() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     $("camMsg").textContent = "이 브라우저에서는 실시간 카메라를 쓸 수 없습니다. '사진 파일 불러오기'를 이용해 주세요."; return;
   }
   try {
     stopCam();
-    stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: facing, width: { ideal: 3840 }, height: { ideal: 2160 } } });
+    stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: facing, width: { ideal: IOS ? 1920 : 3840 }, height: { ideal: IOS ? 1080 : 2160 } } });   // 아이폰은 캔버스 메모리 한도가 낮아 풀HD로 요청
     const v = $("video"); v.srcObject = stream; v.classList.toggle("mirror", facing === "user");
     await v.play();
     fileImg = null; $("fileCv").classList.add("hide"); $("fileCtl").classList.add("hide"); v.classList.remove("hide");
@@ -1018,6 +1092,18 @@ function drawMap(cv, h, mask, gray) {
 }
 function thumb(cv) { const c = document.createElement("canvas"); c.width = c.height = 240; const g = c.getContext("2d"); g.imageSmoothingQuality = "high"; g.drawImage(cv, 0, 0, 240, 240); return c.toDataURL("image/jpeg", 0.8); }
 
+// ── 시작 화면: 닉네임·나이·성별 (이 기기 안에서만 사용, 저장·전송 없음)
+let PROFILE = { nick: "", age: null, sex: "" };
+const whoLine = () => [PROFILE.age ? PROFILE.age + "세" : "", PROFILE.sex].filter(Boolean).join(" ");
+function startMeasure(ev) {
+  ev.preventDefault(); const nick = $("pNick").value.trim(), age = parseInt($("pAge").value, 10), sx = document.querySelector('input[name="pSex"]:checked'), err = $("pErr");
+  if (!nick) { err.textContent = "닉네임을 입력해 주세요."; $("pNick").focus(); return; }
+  if (!(age >= 1 && age <= 99)) { err.textContent = "나이를 숫자로 입력해 주세요."; $("pAge").focus(); return; }
+  if (!sx) { err.textContent = "성별을 선택해 주세요. 밝히고 싶지 않으면 '비공개'를 고르면 됩니다."; return; }
+  err.textContent = ""; PROFILE = { nick, age, sex: sx.value };
+  $("intro").classList.add("hide"); $("sharedCard").classList.add("hide"); $("capCard").classList.remove("hide"); $("who").textContent = nick + "님" + (whoLine() ? " (" + whoLine() + ")" : "");
+  scrollTo(0, 0); startCam();
+}
 // ── 공유: 결과 카드 이미지(1080×1920) + 결과 링크. 서버 저장 없음
 const GCOL = { A: "#1f7a4d", B: "#2f6fb5", C: "#b7791f", D: "#b3261e" };
 const pageUrl = () => location.origin + location.pathname;
@@ -1037,8 +1123,8 @@ function drawCard() {                           // 공유용 카드 그리기
   if (!lastRep) return; const cv = $("cardCv"), g = cv.getContext("2d"), W = 1080, H = 1920, sc = lastRep.rec.scores, total = lastRep.rec.score, gr = gradeOf(total), photo = $("swPhoto").checked;
   cv.width = W; cv.height = H; g.fillStyle = "#f4f3f0"; g.fillRect(0, 0, W, H);
   g.fillStyle = "#fff"; rrect(g, 60, 60, W - 120, H - 120, 48); g.fill();
-  g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillStyle = "#6b2d7b"; g.font = "800 44px sans-serif"; g.fillText("AI 피부 분석", W / 2, 170);
-  g.fillStyle = "#6b6872"; g.font = "500 30px sans-serif"; const d = new Date(lastRep.rec.ts); g.fillText(`${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} 측정`, W / 2, 220);
+  g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillStyle = "#6b2d7b"; g.font = "800 44px sans-serif"; g.fillText((PROFILE.nick ? PROFILE.nick + "님의 " : "AI ") + "피부 분석", W / 2, 170);
+  g.fillStyle = "#6b6872"; g.font = "500 30px sans-serif"; const d = new Date(lastRep.rec.ts); g.fillText((whoLine() ? whoLine() + "  |  " : "") + `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} 측정`, W / 2, 220);
   let y = photo ? 640 : 300;
   if (photo) { const s = 340, x = (W - s) / 2; g.save(); rrect(g, x, 260, s, s, 40); g.clip(); g.drawImage(lastRep.shot.canvas, x, 260, s, s); g.restore(); }
   // 종합 점수
@@ -1081,7 +1167,7 @@ async function copyLink() {
       <div style="margin-top:14px">${gauge(total)}</div>
       <table style="margin-top:14px">${CORE.map(it => `<tr><td>${it.name}</td><td><b>${sc[it.k] == null ? "–" : sc[it.k]}</b> ${chip(sc[it.k])}</td></tr>`).join("")}</table>
     </div><div>${radarSVG([{ scores: sc, color: "#6b2d7b", name: "결과" }])}</div></div>
-    <div class="row" style="margin-top:14px"><button class="btn pri" onclick="document.getElementById('capCard').scrollIntoView({behavior:'smooth'});startCam()">나도 측정하기</button><span class="status">사진 기반 참고용 분석입니다.</span></div>`;
+    <div class="row" style="margin-top:14px"><button class="btn pri" onclick="document.getElementById('intro').scrollIntoView({behavior:'smooth'});document.getElementById('pNick').focus({preventScroll:true})">나도 측정하기</button><span class="status">사진 기반 참고용 분석입니다.</span></div>`;
   $("sharedCard").classList.remove("hide");
 })();
 // ── 전체 리포트를 긴 PNG 한 장으로 (화면의 리포트와 같은 내용)
@@ -1091,10 +1177,10 @@ function wrapText(g, text, x, y, maxW, lh) {     // 한글은 글자 단위로 �
 }
 function drawReport() {
   if (!lastRep) return null; const { shot, rec } = lastRep, sc = rec.scores, photo = $("swPhoto").checked, W = 1080, PAD = 70, CW = W - PAD * 2;
-  const big = document.createElement("canvas"); big.width = W; big.height = 16000; const g = big.getContext("2d"); g.textBaseline = "alphabetic";
+  const big = document.createElement("canvas"); big.width = W; big.height = 15000; /* 아이폰 캔버스 한도(약 1,677만 픽셀) 안쪽 */ const g = big.getContext("2d"); g.textBaseline = "alphabetic";
   g.fillStyle = "#fff"; g.fillRect(0, 0, W, big.height); let y = 110;
-  g.textAlign = "center"; g.fillStyle = "#6b2d7b"; g.font = "800 46px sans-serif"; g.fillText("AI 피부 분석 리포트", W / 2, y); y += 50;
-  g.fillStyle = "#6b6872"; g.font = "500 28px sans-serif"; const d = new Date(rec.ts); g.fillText(`${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} 측정`, W / 2, y); y += 50;
+  g.textAlign = "center"; g.fillStyle = "#6b2d7b"; g.font = "800 46px sans-serif"; g.fillText((PROFILE.nick ? PROFILE.nick + "님의 " : "AI ") + "피부 분석 리포트", W / 2, y); y += 50;
+  g.fillStyle = "#6b6872"; g.font = "500 28px sans-serif"; const d = new Date(rec.ts); g.fillText((whoLine() ? whoLine() + "  |  " : "") + `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} 측정`, W / 2, y); y += 50;
   if (photo) { const s = 380, x = (W - s) / 2; g.save(); rrect(g, x, y, s, s, 36); g.clip(); g.drawImage(shot.canvas, x, y, s, s); g.restore(); y += s + 50; }
   const gr = gradeOf(rec.score), bx = W / 2 - 240; g.fillStyle = GCOL[gr[0]]; rrect(g, bx, y, 160, 160, 34); g.fill();
   g.fillStyle = "#fff"; g.font = "800 90px sans-serif"; g.fillText(gr, bx + 80, y + 112);
