@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>EPIRIS AI 피부분석</title>
+<meta property="og:title" content="EPIRIS AI 피부분석">
+<meta property="og:description" content="휴대폰 화면 빛으로 1분 만에 재는 피부 점수. 나도 측정해 보기">
+<meta property="og:type" content="website">
 <style>
   :root{
     --bg:#f4f3f0; --card:#ffffff; --ink:#1c1b1f; --sub:#6b6872; --line:#e3e1dc;
@@ -364,17 +367,17 @@
         <label class="sw"><input type="checkbox" id="swPhoto" onchange="drawCard()"><i></i><span>내 사진 넣기</span></label>
         <h4 style="margin-top:16px">요약 카드 (스토리용, 한 화면 크기)</h4>
         <div class="row">
-          <button class="btn pri" onclick="shareCard()">카드 인스타 공유</button>
+          <button class="btn pri" onclick="shareCard()">카드 공유 (링크 포함)</button>
           <button class="btn" onclick="saveCard()">카드 저장</button>
         </div>
         <h4 style="margin-top:16px">전체 리포트 (긴 이미지 한 장, 메시지용)</h4>
         <div class="row">
-          <button class="btn pri" onclick="shareReport()">리포트 인스타 공유</button>
+          <button class="btn pri" onclick="shareReport()">리포트 공유 (링크 포함)</button>
           <button class="btn" onclick="saveReport()">리포트 PNG 저장</button>
         </div>
         <div class="row" style="margin-top:16px"><button class="btn" onclick="copyLink()">결과 링크 복사</button></div>
         <p class="dtxt" id="shareMsg" style="color:var(--ink);font-weight:600"></p>
-        <p class="dtxt">공유 버튼을 누르면 휴대폰 공유 창이 열리고, 거기서 Instagram을 고르면 됩니다. '내 사진 넣기'를 끄면 카드와 리포트 모두 얼굴 사진과 검출 이미지 없이 점수와 측정값만 들어갑니다. 결과 링크에는 점수만 담깁니다.</p>
+        <p class="dtxt">공유 버튼을 누르면 휴대폰 공유 창이 열리고, 거기서 Instagram·카카오톡 등을 고르면 됩니다. 이미지와 함께 결과 링크가 전송되고, 사진만 보내지는 앱을 대비해 링크를 복사해 둡니다. '내 사진 넣기'를 끄면 카드와 리포트 모두 얼굴 사진과 검출 이미지 없이 점수와 측정값만 들어갑니다. 결과 링크에는 점수만 담깁니다.</p>
       </div>
     </div>
   </div>
@@ -1263,15 +1266,36 @@ function drawCard() {                           // 공유용 카드 그리기
   g.textAlign = "center"; g.fillStyle = "#6b6872"; g.font = "500 28px sans-serif"; g.fillText("사진 기반 참고용 분석 · 의학적 진단이 아닙니다", W / 2, H - 190);
   g.fillStyle = "#6b2d7b"; g.font = "700 36px sans-serif"; g.fillText("나도 측정하기 → " + pageUrl().replace(/^https?:\/\//, "").replace(/index\.html$/, ""), W / 2, H - 130);
 }
-const cardBlob = () => new Promise(r => $("cardCv").toBlob(r, "image/png"));
-async function shareCard() {
-  drawCard(); const file = new File([await cardBlob()], "피부분석결과.png", { type: "image/png" });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: "EPIRIS AI 피부분석 결과" }); $("shareMsg").textContent = "공유 창에서 Instagram을 선택하면 스토리나 메시지로 보낼 수 있습니다."; }
-    catch (e) { if (e.name !== "AbortError") { saveCard(); } }
-  } else { saveCard(); $("shareMsg").textContent = "이 기기는 바로 공유를 지원하지 않아 이미지를 저장했습니다. 인스타그램 앱에서 이 이미지를 올려 주세요."; }
+const INAPP = /Instagram|KAKAOTALK|FBAN|FBAV|Line\//i.test(navigator.userAgent);
+const toBlobSafe = cv => new Promise(r => { try { cv.toBlob(b => b ? r(b) : cv.toBlob(r, "image/jpeg", 0.92), "image/png"); } catch (e) { r(null); } });
+const cardBlob = () => toBlobSafe($("cardCv"));
+const shareText = () => `EPIRIS AI 피부분석 결과 ${lastRep.rec.score}점(${gradeOf(lastRep.rec.score)}) · 나도 측정하기 ${resultLink()}`;
+function copyQuiet(t) { try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(() => {}); } catch (e) {} }   /* 사진만 넘어가는 앱을 대비해 링크를 미리 복사 */
+let saveUrl = null;
+function showSaveSheet() {                      /* 다운로드가 막힌 브라우저용: 이미지를 띄워 길게 눌러 저장 */
+  if (!saveUrl) return false; let o = $("saveSheet");
+  if (!o) { o = document.createElement("div"); o.id = "saveSheet"; o.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(20,16,26,.94);overflow:auto;-webkit-overflow-scrolling:touch;padding:0 16px 40px";
+    o.innerHTML = `<div style="position:sticky;top:0;display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 0;background:rgba(20,16,26,.94);color:#fff;font-weight:700;font-size:15px;line-height:1.4"><span>이미지를 길게 눌러 ‘사진에 저장’ 또는 ‘이미지 저장’을 선택하세요.</span><button class="btn" style="flex:none" onclick="document.getElementById('saveSheet').remove()">닫기</button></div><img alt="저장할 결과 이미지" style="display:block;width:100%;max-width:540px;margin:0 auto;border-radius:12px;background:#fff">`; document.body.appendChild(o); }
+  o.querySelector("img").src = saveUrl; return false;
 }
-async function saveCard() { drawCard(); const a = document.createElement("a"); a.href = URL.createObjectURL(await cardBlob()); a.download = "피부분석결과.png"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 3000); if (!$("shareMsg").textContent) $("shareMsg").textContent = "이미지를 저장했습니다."; }
+function saveImage(blob, name, msg) {
+  if (!blob) { $("shareMsg").textContent = "이미지를 만들지 못했습니다. 다른 앱을 닫고 다시 눌러 주세요."; return; }
+  if (saveUrl) URL.revokeObjectURL(saveUrl); saveUrl = URL.createObjectURL(blob);
+  if (IOS || INAPP) { showSaveSheet(); $("shareMsg").textContent = "열린 이미지를 길게 눌러 저장해 주세요." + (/링크/.test(msg || "") ? " 결과 링크는 복사해 두었습니다." : ""); return; }
+  const a = document.createElement("a"); a.href = saveUrl; a.download = name; a.style.display = "none"; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1000);
+  $("shareMsg").innerHTML = esc(msg || "이미지를 저장했습니다.") + ` 저장된 파일이 안 보이면 <a href="#" onclick="return showSaveSheet()">여기를 눌러 이미지를 연 뒤 길게 눌러 저장</a>해 주세요.`;
+}
+async function shareImage(blob, name, title, fallbackMsg) {   /* 이미지 + 결과 링크를 함께 공유 */
+  if (!blob) return saveImage(blob, name);
+  const text = shareText(), file = new File([blob], name, { type: blob.type || "image/png" });
+  const can = d => { try { return !!(navigator.canShare && navigator.canShare(d)); } catch (e) { return false; } };
+  const data = can({ files: [file], text }) ? { files: [file], title, text } : can({ files: [file] }) ? { files: [file], title } : null;
+  if (!data) return saveImage(blob, name, fallbackMsg + " 결과 링크는 복사해 두었으니 대화창에 붙여넣어 주세요.");
+  try { await navigator.share(data); $("shareMsg").textContent = "결과 링크도 함께 보냈습니다. 사진만 전송된 경우에는 링크를 복사해 두었으니 대화창에 붙여넣어 주세요."; }
+  catch (e) { if (e.name !== "AbortError") saveImage(blob, name, fallbackMsg + " 결과 링크는 복사해 두었으니 대화창에 붙여넣어 주세요."); }
+}
+async function shareCard() { copyQuiet(shareText()); drawCard(); shareImage(await cardBlob(), "피부분석결과.png", "EPIRIS AI 피부분석 결과", "바로 공유가 되지 않아 카드 이미지를 저장했습니다."); }
+async function saveCard() { drawCard(); saveImage(await cardBlob(), "피부분석결과.png", "카드 이미지를 저장했습니다."); }
 function resultLink() { const sc = lastRep.rec.scores; return pageUrl() + "#r=" + [lastRep.rec.score, ...CORE.map(i => sc[i.k] == null ? "x" : sc[i.k])].join("."); }
 async function copyLink() {
   const url = resultLink();
@@ -1295,9 +1319,9 @@ function wrapText(g, text, x, y, maxW, lh) {     // 한글은 글자 단위로 �
   let line = ""; for (const ch of String(text)) { if (g.measureText(line + ch).width > maxW && line) { g.fillText(line, x, y); y += lh; line = ch === " " ? "" : ch; } else line += ch; }
   if (line) { g.fillText(line, x, y); y += lh; } return y;
 }
-function drawReport() {
+function drawReport(h) {                     /* 1차로 높이만 재고, 2차로 딱 맞는 크기에 그린다 (큰 임시 캔버스를 쓰면 휴대폰에서 실패) */
   if (!lastRep) return null; const { shot, rec } = lastRep, sc = rec.scores, photo = $("swPhoto").checked, W = 1080, PAD = 70, CW = W - PAD * 2;
-  const big = document.createElement("canvas"); big.width = W; big.height = 15000; /* 아이폰 캔버스 한도(약 1,677만 픽셀) 안쪽 */ const g = big.getContext("2d"); g.textBaseline = "alphabetic";
+  const big = document.createElement("canvas"); big.width = W; big.height = h || 8; /* 아이폰 캔버스 한도(약 1,677만 픽셀) 안쪽 */ const g = big.getContext("2d"); g.textBaseline = "alphabetic";
   g.fillStyle = "#fff"; g.fillRect(0, 0, W, big.height); let y = 110;
   g.textAlign = "center"; g.fillStyle = "#6b2d7b"; g.font = "800 46px sans-serif"; g.fillText("EPIRIS AI 피부분석 리포트", W / 2, y); y += 50;
   g.fillStyle = "#6b6872"; g.font = "500 28px sans-serif"; const d = new Date(rec.ts); g.fillText([PROFILE.nick ? PROFILE.nick + "님" : "", whoLine(), `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} 측정`].filter(Boolean).join("  |  "), W / 2, y); y += 50;
@@ -1325,15 +1349,11 @@ function drawReport() {
   g.fillStyle = "#f4f3f0"; g.fillRect(0, y, W, 10); y += 70;
   g.textAlign = "center"; g.fillStyle = "#6b6872"; g.font = "500 26px sans-serif"; g.fillText("사진 기반 참고용 분석 · 의학적 진단이 아닙니다", W / 2, y); y += 50;
   g.fillStyle = "#6b2d7b"; g.font = "700 34px sans-serif"; g.fillText("나도 측정하기 → " + pageUrl().replace(/^https?:\/\//, "").replace(/index\.html$/, ""), W / 2, y); y += 70;
-  const out = document.createElement("canvas"); out.width = W; out.height = Math.min(y, big.height); out.getContext("2d").drawImage(big, 0, 0); return out;
+  if (!h) return drawReport(Math.min(Math.ceil(y), 15000)); return big;
 }
-const reportBlob = () => new Promise(r => drawReport().toBlob(r, "image/png"));
-async function saveReport(msg) { const a = document.createElement("a"); a.href = URL.createObjectURL(await reportBlob()); a.download = "피부분석_리포트.png"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 3000); $("shareMsg").textContent = msg || "리포트 이미지를 저장했습니다."; }
-async function shareReport() {
-  const file = new File([await reportBlob()], "피부분석_리포트.png", { type: "image/png" });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: "EPIRIS AI 피부분석 리포트" }); $("shareMsg").textContent = "공유 창에서 Instagram을 선택하면 메시지(DM)로 보낼 수 있습니다."; } catch (e) { if (e.name !== "AbortError") saveReport(); } }
-  else saveReport("이 기기는 바로 공유를 지원하지 않아 리포트 이미지를 저장했습니다. 인스타그램 앱에서 이 이미지를 보내 주세요.");
-}
+const reportBlob = () => { let cv = null; try { cv = drawReport(); } catch (e) {} return cv ? toBlobSafe(cv) : Promise.resolve(null); };
+async function saveReport() { $("shareMsg").textContent = "리포트 이미지를 만드는 중…"; saveImage(await reportBlob(), "피부분석_리포트.png", "리포트 이미지를 저장했습니다."); }
+async function shareReport() { copyQuiet(shareText()); $("shareMsg").textContent = "리포트 이미지를 만드는 중…"; shareImage(await reportBlob(), "피부분석_리포트.png", "EPIRIS AI 피부분석 리포트", "바로 공유가 되지 않아 리포트 이미지를 저장했습니다."); }
 </script>
 </body>
 </html>
