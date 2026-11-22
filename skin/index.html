@@ -150,6 +150,9 @@
     .steps{grid-template-columns:1fr;gap:18px}
     .steps li{display:grid;grid-template-columns:40px 1fr;column-gap:6px}.steps li::before{grid-row:1 / span 2;margin:0}.steps b{margin:0}
   }
+  .rankbox{margin-top:14px;padding:14px 16px;border-radius:14px;background:#f3ecf6;border:1px solid #e3d3ea}
+  .rank-main{font-size:20px;font-weight:700;color:var(--ink)}.rank-main b{font-weight:800;color:var(--accent)}
+  .rank-sub{font-size:14px;color:var(--sub);margin-top:2px}
   .who{font-size:13px;font-weight:700;color:var(--accent)}
   .cmain{font-size:18px;font-weight:700;line-height:1.5;margin:18px 0 4px;color:var(--ink)}
   .cfact{font-size:15px;line-height:1.5;margin:0 0 4px;color:var(--ink)}
@@ -253,6 +256,7 @@
             <label><input type="radio" name="pSex" value=""><span>비공개</span></label>
           </div></div>
       </div>
+<!--consent-->
       <label class="consent"><input type="checkbox" id="pStat"><i></i><span><b>[선택] 분석 결과를 익명 통계로 제공합니다</b>점수, 연령대, 성별, 기종만 이름 없이 전송됩니다. 체크하지 않아도 분석은 똑같이 이용할 수 있습니다.</span></label>
       <details class="cdetail"><summary>자세히 보기</summary>
         <dl>
@@ -263,9 +267,10 @@
           <dt>운영</dt><dd>㈜에이트랩스</dd>
           <dt>알아 두실 점</dt><dd>누구의 기록인지 알 수 없는 형태로 저장되므로 전송한 뒤에는 개별 기록을 찾아 삭제할 수 없습니다. 만 14세 미만은 체크해도 전송되지 않습니다.</dd>
         </dl></details>
+<!--/consent-->
       <p class="ferr" id="pErr" role="alert"></p>
       <button class="go" type="submit">측정 시작하기</button>
-      <p class="fine">사진과 닉네임은 이 휴대폰 밖으로 나가지 않습니다. 위 항목에 체크한 경우에만 점수와 연령대·성별이 이름 없이 전송됩니다.</p>
+      <p class="fine" id="fineTxt">사진과 닉네임은 이 휴대폰 밖으로 나가지 않습니다. 위 항목에 체크한 경우에만 점수와 연령대·성별이 이름 없이 전송됩니다.</p>
     </form>
     <div class="prep">
       <h3>촬영 전에 준비해 주세요</h3>
@@ -340,6 +345,7 @@
           <div class="score"><span id="rScore">–</span><small> / 100</small></div>
         </div>
         <div id="rScale" style="margin-top:14px"></div>
+        <div class="rankbox hide" id="rankBox"></div>
         <div class="status" id="rSa" style="margin-top:8px"></div>
         <p class="dtxt" id="rSummary" style="color:var(--ink)"></p>
         <div id="rBadges" style="margin-top:10px"></div>
@@ -387,8 +393,8 @@ const LAMBDA_S = 0.3;          // mm, 이보다 작은 노이즈 제거
 const FACE_MM = 140;           // 얼굴 전체 촬영 시 기준 얼굴 폭 (성인 평균 광대 폭)
 const VALLEY_T = -2;           // 골 판정 기준
 const STRUCT_T = 9;            // 이목구비 그림자 제외 기준
-const SCORE_BEST = 0.7, SCORE_WORST = 4.2;   // Sa → 100점 / 1점 기준 (임시 보정값)
-const ALGO = "face-1.1";
+const SCORE_BEST = 0.9, SCORE_WORST = 6.5;   // Sa → 100점 / 1점 기준 (임시 보정값)
+const ALGO = "face-1.3";
 
 const LUT = new Float32Array(256);
 for (let i = 0; i < 256; i++) { const c = i / 255; LUT[i] = c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
@@ -719,7 +725,7 @@ async function features(A, lm, px, M, tick = async () => {}) {   // M: 4색 조�
       cnt++; pa += c.area; const d = 2 * Math.sqrt(c.area / Math.PI) / ppm; if (d < 0.35) sm_++; else if (d < 0.7) md++; else lg++;
       for (const i of c.px) o.hit[i] = 1; }
     const pct = area > 200 ? 100 * pa / area : null, densv = area > 200 ? cnt / (area / cm2) : null;
-    out.pore = { ...o, score: pct == null ? null : lin(pct, 10, 0.5), zoom: zc1, regions: regFrac(o.roi, o.hit), regUnit: "%",
+    out.pore = { ...o, score: pct == null ? null : lin(pct, 18, 1), zoom: zc1, regions: regFrac(o.roi, o.hit), regUnit: "%",
       feats: [["모공 후보 개수", cnt, "개"], ["밀도", r2(densv), "개/cm²"], ["평균 지름", cnt ? r2(2 * Math.sqrt(pa / cnt / Math.PI) / ppm) : null, "mm"], ["면적 비율", r2(pct), "%"], ["크기 분포 (소/중/대)", `${sm_} / ${md} / ${lg}`, "개"]] }; }
 
   await tick("pigment", out.pore);
@@ -747,7 +753,7 @@ async function features(A, lm, px, M, tick = async () => {}) {   // M: 4색 조�
     for (let i = 0; i < n; i++) if (o.roi[i]) { const dL = 0.5 * (Lt[i] - mL), da = at[i] - mA, db = bt[i] - mB; dev[i] = Math.sqrt(dL * dL + da * da + db * db); u += dev[i]; va += da * da; vb += db * db; heat[i] = (dL < 0 ? -1 : 1) * dev[i] / 9; }
     const U = c > 200 ? u / c : null, rl = regMean(o.roi, i => Lt[i]), ra = regMean(o.roi, i => at[i]), rb = regMean(o.roi, i => bt[i]); let mx = 0;
     for (let p = 0; p < 5; p++) for (let q = p + 1; q < 5; q++) if (rl[p] && rl[q] && rl[p][1] != null && rl[q][1] != null) mx = Math.max(mx, Math.hypot(0.5 * (rl[p][1] - rl[q][1]), ra[p][1] - ra[q][1], rb[p][1] - rb[q][1]));
-    out.tone = { ...o, heat, noHit: true, score: U == null ? null : lin(U, 9, 1.5), zoom: null, regions: regMean(o.roi, i => dev[i]), regUnit: "ΔE",
+    out.tone = { ...o, heat, noHit: true, score: U == null ? null : lin(U, 14, 2), zoom: null, regions: regMean(o.roi, i => dev[i]), regUnit: "ΔE",
       feats: [["불균일 지수 (평균 색차)", r2(U), "ΔE"], ["부위 간 최대 색차", r2(mx), "ΔE"], ["붉은기 편차", c ? r2(Math.sqrt(va / c)) : null, "a*"], ["노란기 편차", c ? r2(Math.sqrt(vb / c)) : null, "b*"], ["평균 밝기 (점수 미반영)", r2(mL), "L*"]] }; }
 
   await tick("gloss", out.tone);
@@ -755,7 +761,7 @@ async function features(A, lm, px, M, tick = async () => {}) {   // M: 4색 조�
   { const o = mk(); let a = 0, c = 0, fs = 0, fc = 0;
     for (let i = 0; i < n; i++) { if (reg[i] >= 1 && reg[i] <= 5 && gray[i] >= 0.6 * medY) { o.roi[i] = 1; c++; if (spec[i]) { o.hit[i] = 1; a++; } } if (flat[i] && clean[i]) { fs += Math.abs(g07[i] - g2[i]) * 100; fc++; } }
     const gloss = c ? 100 * a / c : 0, fine = fc ? fs / fc : 0;
-    out.gloss = { ...o, score: Math.round(0.6 * lin(gloss, 0, 12) + 0.4 * lin(fine, 1.6, 0.4)), zoom: null, regions: regFrac(o.roi, o.hit), regUnit: "%", feats: [["윤기(반사) 면적 비율", r2(gloss), "%"], ["미세결 지수", r2(fine), ""]] }; }
+    out.gloss = { ...o, score: Math.round(0.6 * lin(gloss, -1.2, 2.4) + 0.4 * lin(fine, 1.6, 0.4)), zoom: null, regions: regFrac(o.roi, o.hit), regUnit: "%", feats: [["윤기(반사) 면적 비율", r2(gloss), "%"], ["미세결 지수", r2(fine), ""]] }; }
   // 참고 ─ 4색 조명 반사 특징 (점수 없음)
   if (mn) { await tick("multi", out.gloss); const o = mk(), fx = [["4색 사진 정합 품질", r2(mn.reg), "0~1"], ["주변광 비율 (낮을수록 좋음)", r2(100 * mn.amb), "%"], ["노출·화이트밸런스 고정", mn.lock ? "고정됨" : "기기에서 지원 안 함", ""],
       ["적색광 반사 신호", r2(100 * mn.med.r), "%"], ["녹색광 반사 신호", r2(100 * mn.med.g), "%"], ["청색광 반사 신호", r2(100 * mn.med.b), "%"]];
@@ -1004,7 +1010,7 @@ function finish(shots, camera, why) {
   $("rBadges").innerHTML = badges(current).map(b => `<span class="badge ${b[0]}">${esc(b[1])}</span>`).join("");
   $("rSummary").innerHTML = summaryText(scores);
   renderItems();
-  $("resCard").classList.remove("hide"); $("shareMsg").textContent = ""; drawCard(); sendStats(current);
+  $("resCard").classList.remove("hide"); $("shareMsg").textContent = ""; drawCard(); sendStats(current); rankFlow(current);
   $("resCard").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 function summaryText(sc) {
@@ -1145,13 +1151,16 @@ function startMeasure(ev) {
   if (!nick) { err.textContent = "닉네임을 입력해 주세요."; $("pNick").focus(); return; }
   if (!(age >= 1 && age <= 99)) { err.textContent = "나이를 숫자로 입력해 주세요."; $("pAge").focus(); return; }
   if (!sx) { err.textContent = "성별을 선택해 주세요. 밝히고 싶지 않으면 '비공개'를 고르면 됩니다."; return; }
-  err.textContent = ""; PROFILE = { nick, age, sex: sx.value, stat: $("pStat").checked };
-  $("intro").classList.add("hide"); $("sharedCard").classList.add("hide"); $("capCard").classList.remove("hide"); $("who").textContent = nick + "님" + (whoLine() ? " (" + whoLine() + ")" : "");
+  err.textContent = ""; PROFILE = { nick, age, sex: sx.value, stat: !!($("pStat") && $("pStat").checked) };
+  if ($("fSubject")) $("fSubject").value = nick; if ($("infoCard")) $("infoCard").classList.remove("hide");
+  $("intro").classList.add("hide"); if ($("sharedCard")) $("sharedCard").classList.add("hide"); $("capCard").classList.remove("hide"); $("who").textContent = nick + "님" + (whoLine() ? " (" + whoLine() + ")" : "");
   scrollTo(0, 0); startCam();
 }
 // ── 익명 통계 전송 (선택 동의한 경우만). 사진·닉네임·고유 ID 없음. Firebase 설정을 채우기 전에는 아무것도 보내지 않음
 const STATS = { projectId: "promptmarket-c3c3a", apiKey: "AIzaSyD1LHBaYbxaHfZTOQwZrYqDoNNcJkq-Z_8", collection: "measurements", consentVersion: "1.0" };   // Firebase 프로젝트 "8labs"
-function deviceModel() { const u = navigator.userAgent; if (/iPhone/.test(u)) return "iPhone"; if (/iPad/.test(u)) return "iPad"; const m = u.match(/Android [\d.]+; ([^;)]+)/); return m ? m[1].trim().slice(0, 40) : /Android/.test(u) ? "Android" : /Windows/.test(u) ? "Windows PC" : /Mac/.test(u) ? "Mac" : "기타"; }
+let DEV_MODEL = "";
+try { if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) navigator.userAgentData.getHighEntropyValues(["model"]).then(v => { DEV_MODEL = (v.model || "").slice(0, 40); }).catch(() => { }); } catch (e) { }
+function deviceModel() { if (DEV_MODEL) return DEV_MODEL; const u = navigator.userAgent; if (/iPhone/.test(u)) return "iPhone"; if (/iPad/.test(u)) return "iPad"; const m = u.match(/Android [\d.]+; ([^;)]+)/); return m ? m[1].trim().slice(0, 40) : /Android/.test(u) ? "Android" : /Windows/.test(u) ? "Windows PC" : /Mac/.test(u) ? "Mac" : "기타"; }
 function statsPayload(rec) {                    // 전송 내용은 여기 적힌 것이 전부
   const fv = v => typeof v === "number" ? (Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v }) : typeof v === "boolean" ? { booleanValue: v } : { stringValue: String(v) };
   const map = o => ({ mapValue: { fields: Object.fromEntries(Object.entries(o).filter(([, v]) => v != null).map(([k, v]) => [k, fv(v)])) } });
@@ -1161,7 +1170,7 @@ function statsPayload(rec) {                    // 전송 내용은 여기 적�
     ageBand: fv(Math.floor(PROFILE.age / 10) * 10), sex: fv(PROFILE.sex || "비공개"), device: fv(deviceModel()), algo: fv(rec.algo), consentVersion: fv(STATS.consentVersion),
     total: fv(rec.score),
     scores: map({ pore: rec.scores.pore, texture: rec.scores.texture, pigment: rec.scores.pigment, redness: rec.scores.redness, tone: rec.scores.tone, gloss: rec.scores.gloss }),
-    values: map({ textureSa: rec.metrics.Sa, porePct: pick("pore", 3), pigmentPct: pick("pigment", 0), pigmentDark: pick("pigment", 1), pigmentUneven: pick("pigment", 2), moles: pick("pigment", 3), rednessA: pick("redness", 0), rednessPct: pick("redness", 1), toneUneven: pick("tone", 0), glossPct: pick("gloss", 0) }),
+    values: map({ textureSa: rec.metrics.Sa, porePct: pick("pore", 3), pigmentPct: pick("pigment", 0), pigmentDark: pick("pigment", 1), pigmentUneven: pick("pigment", 2), moles: pick("pigment", 3), rednessA: pick("redness", 0), rednessPct: pick("redness", 1), toneUneven: pick("tone", 0), glossPct: pick("gloss", 0), glossFine: pick("gloss", 1) }),
     quality: map({ sharp: rec.quality.sharp, bright: rec.quality.bright, sat: rec.quality.sat, skin: rec.quality.skin, pxPerMm: rec.pxPerMm, lights: rec.lights, lock: rec.lock, reg: rec.reg, amb: rec.amb }) } };
 }
 async function sendStats(rec) {
@@ -1173,6 +1182,26 @@ async function sendStats(rec) {
     el.textContent = r.ok ? "동의하신 대로 점수와 연령대·성별을 이름 없이 통계로 전송했습니다. 사진과 닉네임은 전송하지 않았습니다." : "통계 전송에 실패했습니다. 분석 결과에는 영향이 없습니다."; }
   catch (e) { el.textContent = "통계 전송에 실패했습니다. 분석 결과에는 영향이 없습니다."; }
 }
+// ── 등수: 통계 제공에 동의한 사람들의 종합 점수만 모은 목록에서 계산 (점수와 날짜만 저장)
+const RANK = { collection: "skin_ranks" }; let rankInfo = null;
+async function rankFlow(rec) {
+  rankInfo = null; const el = $("rankBox"); if (!el) return; el.classList.add("hide"); el.innerHTML = "";
+  if (!STATS.projectId || !STATS.apiKey) return;
+  if (!PROFILE.stat || !(PROFILE.age >= 14)) { el.innerHTML = `<p class="status" style="margin:0">익명 통계 제공에 동의하면 전체 참여자 중 내 등수를 볼 수 있어요.</p>`; el.classList.remove("hide"); return; }
+  const base = `https://firestore.googleapis.com/v1/projects/${STATS.projectId}/databases/(default)/documents`, key = `?key=${STATS.apiKey}`, hd = { "Content-Type": "application/json" }, d = new Date(rec.ts);
+  try {
+    const w = await fetch(`${base}/${RANK.collection}${key}`, { method: "POST", headers: hd, body: JSON.stringify({ fields: { total: { integerValue: String(rec.score) }, date: { stringValue: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` } } }) });
+    if (!w.ok) return;
+    const count = async where => { const q = { structuredAggregationQuery: { structuredQuery: Object.assign({ from: [{ collectionId: RANK.collection }] }, where ? { where } : {}), aggregations: [{ alias: "n", count: {} }] } };
+      const r = await fetch(`${base}:runAggregationQuery${key}`, { method: "POST", headers: hd, body: JSON.stringify(q) }); const j = await r.json(); return parseInt(j[0].result.aggregateFields.n.integerValue, 10); };
+    const higher = await count({ fieldFilter: { field: { fieldPath: "total" }, op: "GREATER_THAN", value: { integerValue: String(rec.score) } } }), all = await count(null);
+    if (!(all >= 1)) return;
+    rankInfo = { rank: higher + 1, total: all, pct: Math.max(1, Math.round(100 * (higher + 1) / all)) };
+    el.innerHTML = `<div class="rank-main">전체 <b>${all.toLocaleString()}명</b> 중 <b>${(higher + 1).toLocaleString()}등</b></div><div class="rank-sub">상위 ${rankInfo.pct}%${all < 30 ? " · 아직 참여자가 적어서 재미로만 봐 주세요" : ""}</div>`;
+    el.classList.remove("hide"); drawCard();
+  } catch (e) { rankInfo = null; }
+}
+const rankLine = () => rankInfo ? `전체 ${rankInfo.total.toLocaleString()}명 중 ${rankInfo.rank.toLocaleString()}등  |  상위 ${rankInfo.pct}%` : "";
 // ── 공개용: 측정 방법 대신 가벼운 한마디로 결과를 알려 줌
 const CASUAL = {
   pore: { see: "볼과 코 주변에서 모공처럼 보이는 작은 점들을 찾아봤어요.", c: ["모공이 거의 눈에 안 띄어요. 부러운 피부예요.", "모공이 조금 보이지만 깔끔한 편이에요.", "모공이 눈에 띄는 편이에요. 모공 관리에 신경 써 보면 좋아요.", "모공이 꽤 도드라져 보여요. 꼼꼼한 세안과 모공 케어를 추천해요."] },
@@ -1221,8 +1250,10 @@ function drawCard() {                           // 공유용 카드 그리기
   g.fillStyle = "#fff"; g.font = "800 96px sans-serif"; g.fillText(gr, bx + 85, y + 120);
   g.textAlign = "left"; g.fillStyle = "#1c1b1f"; g.font = "800 150px sans-serif"; g.fillText(String(total), bx + 205, y + 138);
   const tw = g.measureText(String(total)).width; g.fillStyle = "#6b6872"; g.font = "600 44px sans-serif"; g.fillText("/ 100", bx + 220 + tw, y + 138);
+  const rk = rankLine(), dy = rk ? 50 : 0;
+  if (rk) { g.textAlign = "center"; g.fillStyle = "#6b2d7b"; g.font = "800 36px sans-serif"; g.fillText(rk, W / 2, (photo ? 640 : 300) + 170 + 52); }
   // 레이더
-  canvasRadar(g, W / 2, photo ? 1110 : 870, photo ? 190 : 260, sc); y = photo ? 1470 : 1330;
+  canvasRadar(g, W / 2, (photo ? 1110 : 870) + dy, photo ? 190 : 260, sc); y = (photo ? 1470 : 1330) + dy;
   // 항목 점수 (2열)
   const colW = (W - 240) / 2;
   CORE.forEach((it, i) => { const cx0 = 120 + (i % 2) * colW, cy0 = y + Math.floor(i / 2) * (photo ? 76 : 92), s = sc[it.k];
@@ -1275,6 +1306,7 @@ function drawReport() {
   g.fillStyle = "#fff"; g.font = "800 90px sans-serif"; g.fillText(gr, bx + 80, y + 112);
   g.textAlign = "left"; g.fillStyle = "#1c1b1f"; g.font = "800 140px sans-serif"; g.fillText(String(rec.score), bx + 195, y + 128);
   const tw = g.measureText(String(rec.score)).width; g.fillStyle = "#6b6872"; g.font = "600 40px sans-serif"; g.fillText("/ 100", bx + 210 + tw, y + 128); y += 160;
+  if (rankLine()) { g.textAlign = "center"; g.fillStyle = "#6b2d7b"; g.font = "800 36px sans-serif"; g.fillText(rankLine(), W / 2, y + 56); y += 70; }
   canvasRadar(g, W / 2, y + 380, 250, sc); y += 760;
   for (const it of ITEMS.filter(i => !i.info || shot.M)) { const k = it.k, s = sc[k], F = rec.feats[k];
     g.fillStyle = "#f4f3f0"; g.fillRect(0, y, W, 10); y += 70;
