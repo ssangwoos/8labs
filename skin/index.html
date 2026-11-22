@@ -151,6 +151,9 @@
     .steps li{display:grid;grid-template-columns:40px 1fr;column-gap:6px}.steps li::before{grid-row:1 / span 2;margin:0}.steps b{margin:0}
   }
   .who{font-size:13px;font-weight:700;color:var(--accent)}
+  .cmain{font-size:18px;font-weight:700;line-height:1.5;margin:18px 0 4px;color:var(--ink)}
+  .cfact{font-size:15px;line-height:1.5;margin:0 0 4px;color:var(--ink)}
+  .csee{font-size:13px;line-height:1.5;margin:6px 0 0;color:var(--sub)}
   .hide{display:none!important}
   .sharebox{display:grid;grid-template-columns:240px 1fr;gap:20px;align-items:start}
   @media(max-width:600px){.sharebox{grid-template-columns:1fr}.sharebox canvas{max-width:260px;margin:0 auto}}
@@ -342,7 +345,7 @@
         <div id="rBadges" style="margin-top:10px"></div>
       </div>
     </div>
-    <h3>항목별 상세 <span class="status">— 아래로 이어집니다</span></h3>
+    <h3>항목별 결과</h3>
     <div id="rChips" class="tabrow"></div>
     <div id="rAll"></div>
     <canvas id="cvPhoto" width="512" height="512" class="hide"></canvas><canvas id="cvMap" width="512" height="512" class="hide"></canvas>
@@ -919,10 +922,7 @@ const ITEMS = [
     lim: "한쪽에서 비추는 조명은 톤 불균일로 읽힙니다. 정면 균일 조명이 필요합니다." },
   { k: "gloss", name: "윤기", core: 1, cap: "노랑=측정 부위, 빨강=빛이 반사되는 곳",
     how: "주변보다 밝고 색이 옅은 반사 면적(윤기)과 가장 고운 요철(미세결)을 6:4로 합친 값입니다. 반사 면적이 넓고 미세결이 고울수록 점수가 높습니다.",
-    lim: "수분량을 재는 것이 아닙니다. 유분·조명·메이크업에 크게 좌우됩니다." },
-  { k: "multi", name: "4색 조명", info: 1, cap: "적색광/녹색광 반사 비율 지도: 빨강=붉은기 쪽, 파랑=반대 쪽",
-    how: "화면을 백·적·녹·청색으로 바꾸며 찍은 4장을 같은 위치로 맞추고, 화면을 끈 사진(주변광)을 빼서 화면 빛에 의한 반사만 남깁니다. 색소(멜라닌)는 청색을 더 흡수하고 혈색은 녹색을 더 흡수하므로, 적/청 비율은 색소, 적/녹 비율은 붉은기와 관련된 보조 지표로 함께 기록합니다. 아직 검증 전이라 점수에는 반영하지 않습니다.",
-    lim: "화면 빛은 전문 광원이 아니고 기기마다 색이 달라 절대값이 아닌 얼굴 안의 상대 비교입니다. 주변이 밝거나 촬영 중 움직이면 신뢰도가 떨어집니다. 기준값은 임시 설정입니다." }
+    lim: "수분량을 재는 것이 아닙니다. 유분·조명·메이크업에 크게 좌우됩니다." }
 ];
 const CORE = ITEMS.filter(i => i.core), FKEYS = ITEMS.filter(i => i.k !== "texture").map(i => i.k);
 const GR8 = [["D", 0, 30], ["D+", 30, 40], ["C", 40, 50], ["C+", 50, 60], ["B", 60, 70], ["B+", 70, 80], ["A", 80, 90], ["A+", 90, 100]];
@@ -998,7 +998,7 @@ function finish(shots, camera, why) {
   lastRep = { shot: rep, rec: current, why };
   drawRegions($("cvReg"), rep);
   $("rScore").textContent = total; $("rGrade").textContent = current.grade; $("rGrade").className = "grade " + gcls(current.grade);
-  $("rSa").textContent = "모공·피부결·색소·홍조·피부톤·윤기 6개 항목 평균" + (rep.res.mode === "close" ? " · 부분 확대 모드" : "") + (why ? " — " + why : "") + " · 참고용 점수";
+  $("rSa").textContent = "여섯 가지 항목의 평균 점수예요" + (why ? " (" + why + ")" : "");
   $("rScale").innerHTML = gauge(total);
   $("rRadar").innerHTML = radarSVG([{ scores, color: "#6b2d7b", name: "이번 측정" }]);
   $("rBadges").innerHTML = badges(current).map(b => `<span class="badge ${b[0]}">${esc(b[1])}</span>`).join("");
@@ -1018,18 +1018,14 @@ function renderItems() {                        // 모든 항목을 탭 없이 �
   $("rAll").innerHTML = items.map(it => { const k = it.k, s = sc[k], F = rec.feats[k], f = shot.feat && shot.feat[k];
     const regs = F && F.regions ? F.regions.filter(r => r[1] != null) : [], mx = Math.max(...regs.map(r => Math.abs(r[1])), 1e-6), hasZoom = k === "multi" || (f && f.zoom) || (k === "texture" && shot.feat && shot.feat.texture);
     return `<section class="panel" id="sec_${k}">
-    <div class="dhead"><b style="font-size:17px">${it.name}</b>${it.info ? "" : chip(s)}<span class="dscore">${it.info ? "참고 지표" : s == null ? "측정 안 됨" : s + "점"}</span></div>
-    ${it.info ? (f && f.fail ? `<p class="dtxt" style="color:var(--warn);font-weight:700">${esc(f.fail)}</p>` : "") : s == null ? `<p class="dtxt" style="color:var(--warn);font-weight:700">${esc(why || it.none || "이 항목은 측정하지 못했습니다.")}</p>` : gauge(s)}
+    <div class="dhead"><b style="font-size:17px">${it.name}</b>${it.info ? "" : chip(s)}<span class="dscore">${s == null ? "–" : s + "점"}</span></div>
+    ${s == null ? "" : gauge(s)}
     <div class="dp">
       <figure><canvas id="dpMain_${k}"></canvas><figcaption>${it.cap}</figcaption></figure>
       <figure><canvas id="dpZoom_${k}"></canvas><figcaption>${k === "multi" ? "조명별 원본 (백·적 / 녹·청)" : hasZoom ? "확대 (3배)" : "원본"}</figcaption></figure>
     </div>
     ${k === "texture" || (f && f.heat) ? `<div class="legend" style="background:${f && f.pal === "pig" ? PIG_GRAD : $("legend").style.background}"></div><div class="legend-l">${f && f.pal === "pig" ? "<span>옅음</span><span>색소 강도</span><span>진함</span>" : "<span>낮음</span><span>평균</span><span>높음</span>"}</div>` : ""}
-    <div class="dcols">
-      <div><h4>측정값</h4>${F ? `<table>${F.feats.map(r => `<tr><td>${esc(r[0])}</td><td><b>${r[1] == null ? "–" : esc(r[1])}</b> <span style="color:var(--sub)">${esc(r[2])}</span></td></tr>`).join("")}</table>` : "<p class='dtxt'>측정값이 없습니다.</p>"}</div>
-      <div><h4>부위별 비교${F && F.regUnit ? ` <span class="status">(${esc(F.regUnit)})</span>` : ""}</h4>${regs.length ? regs.map(r => `<div class="rbar"><span>${r[0]}</span><i><em style="width:${Math.max(2, 100 * Math.abs(r[1]) / mx)}%"></em></i><b>${r[1]}</b></div>`).join("") : "<p class='dtxt'>부위별 값이 없는 항목입니다.</p>"}</div>
-    </div>
-    <p class="dtxt"><b>측정 원리</b> ${it.how}</p><p class="dtxt"><b>한계</b> ${it.lim}</p></section>`; }).join("");
+    <p class="cmain">${casualText(k, s, F)[0]}</p>${casualText(k, s, F)[1] ? `<p class="cfact">${casualText(k, s, F)[1]}</p>` : ""}<p class="csee">${casualText(k, s, F)[2]}</p></section>`; }).join("");
   for (const it of items) { const k = it.k, f = shot.feat && shot.feat[k], main = $("dpMain_" + k), zoom = $("dpZoom_" + k);
     if (k === "texture") { main.width = main.height = N; main.getContext("2d").drawImage($("cvMap"), 0, 0); }
     else if (f && f.roi) drawOverlay(main, shot.res.gray, f); else { main.width = main.height = N; main.getContext("2d").drawImage(shot.canvas, 0, 0); }
@@ -1093,7 +1089,7 @@ function alignTo(white, other, c, ch) {         // other 프레임을 백색광 
 }
 async function runAnalysis(frames, camera, lock) {   // frames: {white[,red,green,blue,ambient]} 원본 크기 캔버스/비트맵
   const four = !!frames.red, local = capMode === "local", fail = async msg => { await P.close(false); $("camMsg").textContent = msg; $("capCard") ? $("capCard").scrollIntoView({ behavior: "smooth" }) : 0; };
-  P.open((local ? [] : ["face"]).concat(four ? ["prep"] : [], ["skin", "texture", "pore", "pigment", "redness", "tone", "gloss"], four ? ["multi"] : [], ["score"]));
+  P.open((local ? [] : ["face"]).concat(four ? ["prep"] : [], ["skin", "texture", "pore", "pigment", "redness", "tone", "gloss", "score"]));
   const W0 = frames.white.width, H0 = frames.white.height;
   P.show(cv => { cv.width = cv.height = 512; const s = Math.min(W0, H0); cv.getContext("2d").drawImage(frames.white, (W0 - s) / 2, (H0 - s) / 2, s, s, 0, 0, 512, 512); });
   await P.step("face");
@@ -1122,17 +1118,14 @@ async function runAnalysis(frames, camera, lock) {   // frames: {white[,red,gree
   await P.close(true);
   finish([{ ...c, res, feat, why, M }], camera, why);
 }
-function badges(r) {
+function badges(r) {                            // 공개용: 다시 찍으면 좋아지는 것만 쉬운 말로
   const q = r.quality, b = [];
-  b.push(q.sharp >= 25 ? ["ok", "초점 양호"] : q.sharp >= 8 ? ["warn", "초점 약함 — 점수가 높게 나올 수 있음"] : ["bad", "초점 불량 — 재촬영 권장"]);
-  b.push(r.pxPerMm >= 6 ? ["ok", `해상도 ${r.pxPerMm}px/mm`] : r.pxPerMm >= 3 ? ["warn", `해상도 ${r.pxPerMm}px/mm — 모공 단위는 안 보임`] : ["bad", `해상도 ${r.pxPerMm}px/mm 부족 — 더 가까이`]);
-  b.push(q.bright < 60 ? ["warn", "어두움"] : q.bright > 215 ? ["warn", "너무 밝음"] : ["ok", "밝기 적정"]);
-  if (q.sat > 2) b.push(["warn", `빛 번짐 ${q.sat.toFixed(1)}%` + (q.sat > 5 ? " — 화면 밝기를 조금 낮춰 주세요" : "")]);
-  b.push(q.skin >= 15 ? ["ok", `분석 피부 면적 ${q.skin.toFixed(0)}%`] : ["warn", `분석 피부 면적 ${q.skin.toFixed(0)}% — 얼굴을 더 크게`]);
-  if (r.lights === 4) { b.push(r.reg >= 0.35 ? ["ok", "4색 사진 정합 양호"] : r.reg >= 0.15 ? ["warn", "4색 사진 정합 약함 — 촬영 중 움직임"] : ["bad", "4색 사진 정합 실패"]); b.push(r.lock ? ["ok", "노출 고정됨"] : ["warn", "노출 고정 미지원 기기"]);
-    if (r.amb != null) b.push(r.amb <= 0.25 ? ["ok", "주변 빛 차단 양호"] : r.amb <= 0.5 ? ["warn", "주변이 밝음 — 불을 끄고 다시 찍으면 더 정확"] : ["bad", "주변이 너무 밝음 — 빛을 막고 재촬영 권장"]); }
-  if (q.cv != null) b.push(q.cv <= 5 ? ["ok", `반복 편차 ${q.cv}%`] : q.cv <= 10 ? ["warn", `반복 편차 ${q.cv}%`] : ["bad", `반복 편차 ${q.cv}% — 재촬영 권장`]);
-  return b;
+  if (q.sharp < 8) b.push(["bad", "사진이 흐려요. 다시 찍으면 더 정확해요"]); else if (q.sharp < 25) b.push(["warn", "사진이 살짝 흐려요"]);
+  if (q.bright < 60) b.push(["warn", "조금 어둡게 찍혔어요"]); else if (q.bright > 215) b.push(["warn", "너무 밝게 찍혔어요. 화면 밝기를 조금 낮춰 보세요"]);
+  if (q.sat > 5) b.push(["warn", "빛이 번진 부분이 있어요. 화면 밝기를 조금 낮춰 보세요"]);
+  if (q.skin < 15) b.push(["warn", "얼굴이 작게 찍혔어요. 조금 더 가까이에서 찍어 보세요"]);
+  if (r.lights === 4 && r.amb != null && r.amb > 0.25) b.push([r.amb > 0.5 ? "bad" : "warn", "주변이 밝아요. 불을 끄고 찍으면 더 정확해요"]);
+  if (!b.length) b.push(["ok", "촬영 상태가 좋아요"]); return b;
 }
 function drawMap(cv, h, mask, gray) {
   const g = cv.getContext("2d"), im = g.createImageData(N, N), d = im.data;
@@ -1180,6 +1173,26 @@ async function sendStats(rec) {
     el.textContent = r.ok ? "동의하신 대로 점수와 연령대·성별을 이름 없이 통계로 전송했습니다. 사진과 닉네임은 전송하지 않았습니다." : "통계 전송에 실패했습니다. 분석 결과에는 영향이 없습니다."; }
   catch (e) { el.textContent = "통계 전송에 실패했습니다. 분석 결과에는 영향이 없습니다."; }
 }
+// ── 공개용: 측정 방법 대신 가벼운 한마디로 결과를 알려 줌
+const CASUAL = {
+  pore: { see: "볼과 코 주변에서 모공처럼 보이는 작은 점들을 찾아봤어요.", c: ["모공이 거의 눈에 안 띄어요. 부러운 피부예요.", "모공이 조금 보이지만 깔끔한 편이에요.", "모공이 눈에 띄는 편이에요. 모공 관리에 신경 써 보면 좋아요.", "모공이 꽤 도드라져 보여요. 꼼꼼한 세안과 모공 케어를 추천해요."] },
+  texture: { see: "피부 표면이 얼마나 매끈한지 살펴봤어요.", c: ["피부결이 아주 매끈해요.", "피부결이 고른 편이에요.", "피부결이 살짝 거칠어 보여요. 각질과 보습을 챙겨 보세요.", "피부결이 거친 편이에요. 순한 각질 케어와 충분한 보습이 필요해 보여요."] },
+  pigment: { see: "주변 피부보다 어둡게 보이는 점과 잡티를 찾아봤어요.", c: ["잡티가 거의 없이 맑아요.", "잡티가 조금 있지만 깨끗한 편이에요.", "잡티가 눈에 띄는 편이에요. 자외선 차단을 꼭 챙겨 주세요.", "잡티가 많은 편이에요. 자외선 차단과 톤 케어를 꾸준히 해 보세요."] },
+  redness: { see: "얼굴에서 유난히 붉게 보이는 부분을 찾아봤어요.", c: ["붉은기가 거의 없어요.", "붉은기가 살짝 있지만 편안해 보여요.", "붉은기가 눈에 띄어요. 자극을 줄이고 진정 케어를 해 보세요.", "붉은기가 많은 편이에요. 순한 제품으로 진정에 집중해 보세요."] },
+  tone: { see: "얼굴 전체의 피부색이 얼마나 고른지 살펴봤어요.", c: ["피부톤이 아주 고르고 균일해요.", "피부톤이 고른 편이에요.", "부위마다 톤 차이가 조금 있어요.", "톤이 고르지 않은 편이에요. 톤 케어를 꾸준히 해 보세요."] },
+  gloss: { see: "빛을 받았을 때 피부에 도는 윤기를 살펴봤어요.", c: ["윤기가 반짝반짝 살아 있어요.", "윤기가 적당히 도는 편이에요.", "윤기가 조금 부족해 보여요. 보습을 더해 보세요.", "피부가 푸석해 보여요. 수분과 영양을 충분히 채워 주세요."] }
+};
+function casualFact(k, F) {                     // 숫자는 한 줄만, 쉬운 말로
+  if (!F) return ""; const v = i => F.feats[i] && typeof F.feats[i][1] === "number" ? F.feats[i][1] : null;
+  if (k === "pore" && v(1) != null) return `손톱만 한 넓이(1cm²)에 모공이 ${Math.round(v(1))}개쯤 보여요.`;
+  if (k === "pigment") { const a = v(3) || 0, b = v(4) || 0, c = v(5) || 0; return a + b + c ? `뚜렷한 점 ${a}개, 옅은 점 ${b}개, 잡티 ${c}곳을 찾았어요.` : "눈에 띄는 점이나 잡티를 찾지 못했어요."; }
+  if (k === "redness" && v(1) != null) return `붉어 보이는 부분은 얼굴의 ${Math.round(v(1))}% 정도예요.`;
+  if (k === "gloss" && v(0) != null) return `빛이 반사되어 윤기 나는 부분이 ${Math.round(v(0))}% 정도예요.`;
+  return "";
+}
+function casualText(k, s, F) { const C = CASUAL[k]; if (!C) return ["", "", ""]; if (s == null) return ["이 항목은 이번 사진으로 측정하지 못했어요.", "앞머리를 올리고 정면에서 다시 찍어 보세요.", ""]; return [C.c[s >= 80 ? 0 : s >= 60 ? 1 : s >= 40 ? 2 : 3], casualFact(k, F), C.see]; }
+Object.assign(PSTEPS, { prep: ["사진 정리", "네 장의 사진을 가지런히 맞추고 있어요"], face: ["얼굴 찾기", "얼굴 위치를 찾고 있어요"], skin: ["피부 고르기", "피부만 골라내고 있어요"], texture: ["피부결", "피부결을 살펴보고 있어요"], pore: ["모공", "모공을 찾아보고 있어요"],
+  pigment: ["색소·점", "점과 잡티를 찾아보고 있어요"], redness: ["홍조", "붉은 부분을 살펴보고 있어요"], tone: ["피부톤", "피부톤이 고른지 보고 있어요"], gloss: ["윤기", "윤기를 살펴보고 있어요"], score: ["점수 계산", "점수를 매기고 있어요"] });
 // ── 공유: 결과 카드 이미지(1080×1920) + 결과 링크. 서버 저장 없음
 const GCOL = { A: "#1f7a4d", B: "#2f6fb5", C: "#b7791f", D: "#b3261e" };
 const pageUrl = () => location.origin + location.pathname;
@@ -1274,9 +1287,9 @@ function drawReport() {
     const m = $("dpMain_" + k), z = $("dpZoom_" + k);
     if (photo && m && z) { const s2 = (CW - 20) / 2; g.save(); rrect(g, PAD, y, s2, s2, 16); g.clip(); g.drawImage(m, PAD, y, s2, s2); g.restore(); g.save(); rrect(g, PAD + s2 + 20, y, s2, s2, 16); g.clip(); g.drawImage(z, PAD + s2 + 20, y, s2, s2); g.restore(); y += s2 + 34;
       g.textAlign = "left"; g.fillStyle = "#6b6872"; g.font = "500 22px sans-serif"; y = wrapText(g, it.cap, PAD, y, CW, 30) + 12; }
-    if (F) for (const r of F.feats) { g.textAlign = "left"; g.fillStyle = "#1c1b1f"; g.font = "500 27px sans-serif"; g.fillText(r[0], PAD, y + 30);
-      g.textAlign = "right"; g.font = "800 28px sans-serif"; g.fillText((r[1] == null ? "–" : r[1]) + (r[2] ? " " + r[2] : ""), W - PAD, y + 30); g.fillStyle = "#e3e1dc"; g.fillRect(PAD, y + 46, CW, 2); y += 50; }
-    y += 34; g.textAlign = "left"; g.fillStyle = "#6b6872"; g.font = "500 24px sans-serif"; y = wrapText(g, "측정 원리  " + it.how, PAD, y, CW, 34); y = wrapText(g, "한계  " + it.lim, PAD, y + 8, CW, 34) + 30; }
+    const ct = casualText(k, s, F); y += 30; g.textAlign = "left"; g.fillStyle = "#1c1b1f"; g.font = "700 34px sans-serif"; y = wrapText(g, ct[0], PAD, y, CW, 48);
+    if (ct[1]) { g.font = "500 28px sans-serif"; y = wrapText(g, ct[1], PAD, y + 6, CW, 40); }
+    if (ct[2]) { g.fillStyle = "#6b6872"; g.font = "500 24px sans-serif"; y = wrapText(g, ct[2], PAD, y + 8, CW, 34); } y += 34; }
   g.fillStyle = "#f4f3f0"; g.fillRect(0, y, W, 10); y += 70;
   g.textAlign = "center"; g.fillStyle = "#6b6872"; g.font = "500 26px sans-serif"; g.fillText("사진 기반 참고용 분석 · 의학적 진단이 아닙니다", W / 2, y); y += 50;
   g.fillStyle = "#6b2d7b"; g.font = "700 34px sans-serif"; g.fillText("나도 측정하기 → " + pageUrl().replace(/^https?:\/\//, "").replace(/index\.html$/, ""), W / 2, y); y += 70;
