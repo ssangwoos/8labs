@@ -60,6 +60,12 @@ button{font:inherit;cursor:pointer}
 .steps{margin:0 0 14px;padding-left:20px;font-size:15px}
 .steps li{margin-bottom:6px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;font-weight:700;display:none}
+.it{display:grid;grid-template-columns:2.2fr 1fr 1.1fr 1.3fr 34px;gap:6px;align-items:center;margin-top:6px}
+.it.ih{font-size:12px;color:var(--sub);font-weight:700;margin-top:8px}
+.it>*{min-width:0}.it input{padding:9px 10px;font-size:15px;width:100%;margin:0}
+.it .x{border:0;background:none;color:#b0b0b6;font-size:22px;line-height:1;cursor:pointer;padding:0}
+.it .x:hover{color:#c0271b}
+@media(max-width:560px){.it{grid-template-columns:1fr 1fr 1fr 28px}.it .nm{grid-column:1/4}.it input{font-size:14px;padding:8px}.it.ih{display:none}.it{border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:8px}.it .x{grid-row:1;grid-column:4}}
 footer{text-align:center;color:var(--sub);font-size:13px;padding:6px 0 0}
 @media(max-width:560px){.g{grid-template-columns:1fr}.eq{grid-template-columns:1fr 1fr}.eq .nm{grid-column:1/-1}h1{font-size:24px}}
 </style>
@@ -96,11 +102,15 @@ footer{text-align:center;color:var(--sub);font-size:13px;padding:6px 0 0}
     <h2><span class="n">02</span>제품 정보</h2><p class="lead">입점을 원하는 제품을 알려 주세요.</p>
     <div class="q"><div class="t">카테고리 <span class="req" style="color:var(--acc)">*</span> <span style="font-weight:400;color:var(--sub)">(여러 개 선택)</span></div><div class="seg" data-m="cats" data-o="스킨케어,메이크업,헤어·바디,이너뷰티,건강기능식품,맨즈,웰니스,향수,기타"></div></div>
     <div class="g" style="margin-top:8px">
-      <label class="f w">입점 희망 제품 <span class="req">*</span><textarea data-k="products" placeholder="한 줄에 하나씩: 제품명 / 소비자가 / 용량&#10;예: 시카 수분크림 / 32,000원 / 50ml"></textarea></label>
+      <div class="f w">입점 희망 제품 <span class="req">*</span>
+        <div class="it ih"><span>제품명</span><span>용량</span><span>소비자가</span><span>공급가 (VAT 포함)</span><span></span></div>
+        <div id="its"></div>
+        <button class="btn" type="button" id="itAdd" style="margin-top:4px">+ 제품 추가</button>
+      </div>
       <label class="f">소비자가 범위<input type="text" data-k="priceRange" placeholder="예: 18,000~45,000원"></label>
       <label class="f">희망 공급률<div class="unit"><input type="number" data-k="rate" inputmode="numeric" min="0" max="100"><span>%</span></div></label>
-      <label class="f">제조사<input type="text" data-k="maker" placeholder="자체 생산이면 '자체'"></label>
-      <label class="f">주요 고객층<input type="text" data-k="target" placeholder="예: 20~30대 민감성 피부 여성"></label>
+      <label class="f w">주요 고객층<input type="text" data-k="target" placeholder="예: 20~30대 민감성 피부 여성"></label>
+      <label class="f w">제품 소개서 링크<input type="text" data-k="deck" placeholder="구글 드라이브·노션·상세페이지 등 링크"><span style="font-weight:400;color:var(--sub);font-size:13px;margin-top:5px;display:block">링크가 없으면 소개서 파일을 <b style="color:var(--accd)">m.kwon@8labs.kr</b> 로 보내 주세요. (메일 제목에 브랜드명을 적어 주세요)</span></label>
     </div>
     <div class="q" style="margin-top:8px"><div class="t">현재 판매 채널 <span style="font-weight:400;color:var(--sub)">(여러 개 선택)</span></div><div class="seg" data-m="channels" data-o="자사몰,스마트스토어,쿠팡,올리브영,약국,백화점·오프라인,해외,아직 없음"></div></div>
     <div class="g" style="margin-top:6px">
@@ -174,9 +184,11 @@ footer{text-align:center;color:var(--sub);font-size:13px;padding:6px 0 0}
 (function(){
   var KEY='brand-apply-v1';
   var DOCS=['사업자등록증 사본','제품 사진 (누끼·연출)','브랜드 소개서 또는 상세페이지','성분표·시험성적서','건강기능식품 신고·인증 서류 (해당 시)','기능성 화장품 심사·보고 자료 (해당 시)'];
-  var D={cats:[],channels:[],collab:[],docs:[]};
+  var NEWIT=function(){return {name:'',vol:'',price:'',supply:''}};
+  var D={cats:[],channels:[],collab:[],docs:[],items:[NEWIT()]};
   try{var s=localStorage.getItem(KEY);if(s){var o=JSON.parse(s);if(o&&typeof o==='object')D=Object.assign(D,o)}}catch(e){}
   ['cats','channels','collab','docs'].forEach(function(k){if(!Array.isArray(D[k]))D[k]=[]});
+  if(!Array.isArray(D.items)||!D.items.length)D.items=[NEWIT()];
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   var made=false;function keep(){if(made)return;try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
   function toast(t){var el=document.getElementById('toast');el.textContent=t;el.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(function(){el.style.display='none'},2200)}
@@ -190,6 +202,12 @@ footer{text-align:center;color:var(--sub);font-size:13px;padding:6px 0 0}
   });
   document.getElementById('docs').innerHTML=DOCS.map(function(t,i){return '<label class="chk"><input type="checkbox" data-d="'+i+'"'+(D.docs.indexOf(i)>=0?' checked':'')+'><span>'+esc(t)+'</span></label>'}).join('');
   document.getElementById('docs').addEventListener('change',function(){D.docs=[].slice.call(document.querySelectorAll('[data-d]:checked')).map(function(i){return +i.dataset.d});keep()});
+  var its=document.getElementById('its');
+  function itPaint(){its.innerHTML=D.items.map(function(t,i){return '<div class="it"><input class="nm" data-i="'+i+'" data-f="name" placeholder="'+(i?'제품명':'예: 시카 수분크림')+'" value="'+esc(t.name)+'"><input data-i="'+i+'" data-f="vol" placeholder="'+(i?'용량':'용량 예: 50ml')+'" value="'+esc(t.vol)+'"><input data-i="'+i+'" data-f="price" inputmode="numeric" placeholder="'+(i?'소비자가':'소비자가 32,000원')+'" value="'+esc(t.price)+'"><input data-i="'+i+'" data-f="supply" inputmode="numeric" placeholder="'+(i?'공급가 (VAT 포함)':'공급가 19,000원')+'" value="'+esc(t.supply)+'"><button type="button" class="x" data-x="'+i+'" aria-label="삭제" title="삭제">×</button></div>'}).join('')}
+  itPaint();
+  its.addEventListener('input',function(e){var t=e.target;if(t.dataset.i==null)return;D.items[+t.dataset.i][t.dataset.f]=t.value;keep()});
+  its.addEventListener('click',function(e){var b=e.target.closest('[data-x]');if(!b)return;D.items.splice(+b.dataset.x,1);if(!D.items.length)D.items=[NEWIT()];keep();itPaint()});
+  document.getElementById('itAdd').addEventListener('click',function(){D.items.push(NEWIT());keep();itPaint();var a=its.querySelectorAll('.nm');a[a.length-1].focus()});
   ['agree','agreeP'].forEach(function(id){var el=document.getElementById(id);el.checked=!!D[id];el.addEventListener('change',function(){D[id]=el.checked;keep()})});
 
   function b64(str){var b=new TextEncoder().encode(str),s='';for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
@@ -197,7 +215,7 @@ footer{text-align:center;color:var(--sub);font-size:13px;padding:6px 0 0}
     var L=[],p=function(l,v){if(v!==''&&v!=null&&!(Array.isArray(v)&&!v.length))L.push('· '+l+': '+(Array.isArray(v)?v.join(', '):v))};
     L.push('[에이트성수 브랜드 무료 입점 신청서]');
     p('브랜드',d.brand);p('회사',d.company);p('대표자',d.ceo);p('사업자등록번호',d.bizno);p('담당자',d.contact+(d.role?' ('+d.role+')':''));p('연락처',d.phone);p('이메일',d.email);p('인스타그램',d.insta);p('홈페이지',d.site);
-    p('카테고리',d.cats);p('입점 희망 제품',d.products?'\n'+d.products:'');p('소비자가 범위',d.priceRange);p('희망 공급률',d.rate?d.rate+'%':'');p('제조사',d.maker);p('주요 고객층',d.target);
+    p('카테고리',d.cats);p('입점 희망 제품',d.products?'\n'+d.products:'');p('소비자가 범위',d.priceRange);p('희망 공급률',d.rate?d.rate+'%':'');p('제품 소개서',d.deck||'메일로 보냄 (m.kwon@8labs.kr)');p('주요 고객층',d.target);
     p('판매 채널',[].concat(d.channels,d.channelEtc?[d.channelEtc]:[]));p('브랜드 소개',d.intro);p('제품 강점',d.strength);p('협력 가능 활동',d.collab);p('희망 입점 시기',d.start);p('문의',d.etc);
     p('준비된 자료',d.docs.map(function(i){return DOCS[i]}));
     L.push('· 개인정보 수집·이용 동의: 예 / 신청일 '+d.date);
@@ -206,14 +224,17 @@ footer{text-align:center;color:var(--sub);font-size:13px;padding:6px 0 0}
   }
   function fail(msg,k){var er=document.getElementById('err');er.textContent=msg;er.style.display='block';var el=k&&document.querySelector('[data-k="'+k+'"]');if(el){el.focus();el.scrollIntoView({block:'center'})}}
   document.getElementById('go').addEventListener('click',function(){
-    var need=[['brand','브랜드명'],['company','회사명'],['contact','담당자'],['phone','연락처'],['email','이메일'],['products','입점 희망 제품'],['intro','브랜드 소개']];
+    var need=[['brand','브랜드명'],['company','회사명'],['contact','담당자'],['phone','연락처'],['email','이메일'],['intro','브랜드 소개']];
     for(var i=0;i<need.length;i++)if(!String(D[need[i][0]]||'').trim())return fail(need[i][1]+'을(를) 적어 주세요.',need[i][0]);
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(D.email).trim()))return fail('이메일 주소를 확인해 주세요.','email');
     if(!D.cats.length)return fail('카테고리를 하나 이상 골라 주세요.');
+    if(!D.items.some(function(t){return String(t.name||'').trim()})){var f0=its.querySelector('.nm');if(f0){f0.focus();f0.scrollIntoView({block:'center'})}return fail('입점 희망 제품을 하나 이상 적어 주세요.')}
     if(!D.agreeP)return fail('개인정보 수집·이용에 동의해 주세요.');
     if(!D.agree)return fail('사실대로 기재했다는 확인에 표시해 주세요.');
     document.getElementById('err').style.display='none';
-    var d=JSON.parse(JSON.stringify(D));d.v=1;d.at=new Date().toISOString();
+    var d=JSON.parse(JSON.stringify(D));d.v=2;d.at=new Date().toISOString();
+    d.items=d.items.filter(function(t){return String(t.name||'').trim()}).slice(0,30).map(function(t){return {name:String(t.name).trim().slice(0,100),vol:String(t.vol||'').trim().slice(0,30),price:String(t.price||'').trim().slice(0,30),supply:String(t.supply||'').trim().slice(0,30)}});
+    d.products=d.items.map(function(t){return [t.name,t.vol,t.price?'소비자가 '+t.price:'',t.supply?'공급가 '+t.supply+'(VAT포함)':''].filter(Boolean).join(' / ')}).join('\n');
     Object.keys(d).forEach(function(k){if(typeof d[k]==='string')d[k]=d[k].slice(0,2000)});
     var cfg=window.FT_FIREBASE||{},btn=document.getElementById('go');
     var showCopy=function(){document.getElementById('out').value=build(d);try{localStorage.removeItem(KEY)}catch(e){}made=true;document.getElementById('form').style.display='none';document.getElementById('done').style.display='block';window.scrollTo(0,0)};
@@ -237,10 +258,10 @@ footer{text-align:center;color:var(--sub);font-size:13px;padding:6px 0 0}
   });
   var rs=0;
   document.getElementById('reset').addEventListener('click',function(){var n=Date.now();if(n-rs>5000){rs=n;toast('한 번 더 누르면 모두 지워집니다.');return}try{localStorage.removeItem(KEY)}catch(e){}
-    D={cats:[],channels:[],collab:[],docs:[],date:today()};
+    D={cats:[],channels:[],collab:[],docs:[],items:[NEWIT()],date:today()};
     document.querySelectorAll('[data-k]').forEach(function(el){el.value=D[el.dataset.k]||''});
     document.querySelectorAll('input[type=checkbox],input[type=radio]').forEach(function(el){el.checked=false});
-    rs=0;window.scrollTo(0,0);toast('모두 지웠습니다.')});
+    itPaint();rs=0;window.scrollTo(0,0);toast('모두 지웠습니다.')});
 })();
 </script>
 </body>

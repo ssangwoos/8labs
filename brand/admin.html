@@ -53,6 +53,7 @@ tr.r{cursor:pointer}tr.r:hover{background:#fffaf7}
 .vlist li b{flex:1;min-width:0;overflow-wrap:anywhere}
 .chk{display:flex;gap:6px;flex-wrap:wrap}.chk label{display:flex;gap:4px;align-items:center;font-weight:600;font-size:13px;border:1px solid var(--line);border-radius:999px;padding:5px 10px;cursor:pointer}
 .chk input{width:auto;accent-color:var(--acc)}
+.itr{display:grid;grid-template-columns:2.2fr 1fr 1.1fr 1.3fr 30px;gap:6px;margin-top:6px;align-items:center}.itr.h{font-size:12px;color:var(--sub);font-weight:700}.itr button{border:0;background:none;font-size:20px;color:#aaa;cursor:pointer}
 .empty{text-align:center;color:var(--sub);padding:40px}
 @media(max-width:640px){.fg{grid-template-columns:1fr 1fr}.w2{grid-column:1/-1}}
 </style>
@@ -74,7 +75,7 @@ const CHS=['자사몰','스마트스토어','쿠팡','올리브영','약국','�
 const COL=['샘플·테스터 제공','매장 행사·시연','인플루언서 협업','SNS 공동 홍보','판촉물·POP 제공'];
 const DOCS=['사업자등록증 사본','제품 사진 (누끼·연출)','브랜드 소개서 또는 상세페이지','성분표·시험성적서','건강기능식품 신고·인증 서류 (해당 시)','기능성 화장품 심사·보고 자료 (해당 시)'];
 const F=[['01 브랜드·회사',[['brand','브랜드명 *','w2'],['company','회사명','w2'],['ceo','대표자'],['bizno','사업자등록번호'],['contact','담당자'],['role','직책'],['phone','연락처'],['email','이메일'],['insta','인스타그램','w2'],['site','홈페이지·스토어','w2']]],
- ['02 제품',[['cats','카테고리','w4','m',CATS],['products','입점 희망 제품','w4','ta'],['priceRange','소비자가 범위'],['rate','희망 공급률(%)'],['maker','제조사'],['target','주요 고객층'],['channels','판매 채널','w4','m',CHS],['channelEtc','그 외 판매 채널','w4'],['intro','브랜드 소개','w4','ta'],['strength','제품 강점','w4','ta']]],
+ ['02 제품',[['cats','카테고리','w4','m',CATS],['priceRange','소비자가 범위'],['rate','희망 공급률(%)'],['target','주요 고객층','w2'],['deck','제품 소개서 링크','w4'],['channels','판매 채널','w4','m',CHS],['channelEtc','그 외 판매 채널','w4'],['intro','브랜드 소개','w4','ta'],['strength','제품 강점','w4','ta']]],
  ['03 협력·일정',[['collab','협력 가능 활동','w4','m',COL],['start','희망 입점 시기','w2'],['date','신청일','w2'],['etc','문의·요청 사항','w4','ta']]]];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -173,6 +174,8 @@ async function delViewer(em){
 }
 
 /* ── 상세·수정 ── */
+function itList(d){if(Array.isArray(d.items)&&d.items.length)return d.items;return String(d.products||'').split('\n').filter(Boolean).map(l=>({name:l,vol:'',price:'',supply:''}))}
+function itRows(d){const L=itList(d);return (L.length?L:[{}]).map(t=>`<div class="itr"><input data-if="name" value="${esc(t.name||'')}" placeholder="제품명"><input data-if="vol" value="${esc(t.vol||'')}" placeholder="용량"><input data-if="price" value="${esc(t.price||'')}" placeholder="소비자가"><input data-if="supply" value="${esc(t.supply||'')}" placeholder="공급가"><button data-ix title="삭제">×</button></div>`).join('')}
 function openApp(id){
   const x=L.find(a=>a.id===id);if(!x)return;const d=x.data||{};
   const fld=([k,l,cls,type,opts])=>{const v=d[k];
@@ -184,10 +187,13 @@ function openApp(id){
       <label class="f">우리 담당<input id="eAs" value="${esc(x.assignee||'')}" placeholder="이름"></label>
       <label class="f w2">내부 메모<textarea id="eMemo" style="min-height:42px" placeholder="검토 의견, 연락 내용">${esc(x.memo||'')}</textarea></label></div>
     ${F.map(([t,fs])=>`<div class="gt">${t}</div><div class="fg">${fs.map(fld).join('')}</div>`).join('')}
+    <div class="gt">입점 희망 제품</div><div class="itr h"><span>제품명</span><span>용량</span><span>소비자가</span><span>공급가 (VAT 포함)</span><span></span></div><div id="eIts">${itRows(d)}</div><button class="btn sm" id="eItAdd" style="margin-top:6px">+ 제품 추가</button>
     <div class="gt">04 준비된 자료</div><div class="chk" data-dk="docs">${DOCS.map((t,i)=>`<label><input type="checkbox" value="${i}" ${(d.docs||[]).includes(i)?'checked':''}>${esc(t)}</label>`).join('')}</div>
     <div class="muted" style="margin-top:10px">개인정보 수집·이용 동의 ${d.agreeP?'예':'아니오'}</div>
     <div class="mfoot">${role==='owner'?'<button class="btn del" id="eDel">신청 삭제</button>':''}<span class="sp"></span><button class="btn" id="eX">닫기</button><button class="btn pri" id="eSave">저장</button></div>`;
   $('mbg').classList.add('on');
+  $('eIts').onclick=e=>{const b=e.target.closest('[data-ix]');if(b)b.closest('.itr').remove()};
+  $('eItAdd').onclick=()=>{$('eIts').insertAdjacentHTML('beforeend',itRows({items:[{}]}))};
   $('eX').onclick=closeM;$('eSave').onclick=()=>saveApp(x);
   if($('eDel'))$('eDel').onclick=()=>delApp(x);
 }
@@ -199,6 +205,9 @@ async function saveApp(x){
   document.querySelectorAll('#modal [data-k]').forEach(el=>{d[el.dataset.k]=el.value.trim().slice(0,2000)});
   document.querySelectorAll('#modal [data-mk]').forEach(box=>{d[box.dataset.mk]=[...box.querySelectorAll('input:checked')].map(i=>i.value)});
   d.docs=[...document.querySelectorAll('#modal [data-dk] input:checked')].map(i=>+i.value);
+  d.items=[...document.querySelectorAll('#eIts .itr')].map(r=>{const o={};r.querySelectorAll('[data-if]').forEach(i=>o[i.dataset.if]=i.value.trim().slice(0,100));return o}).filter(t=>t.name).slice(0,30);
+  d.products=d.items.map(t=>[t.name,t.vol,t.price?'소비자가 '+t.price:'',t.supply?'공급가 '+t.supply+'(VAT포함)':''].filter(Boolean).join(' / ')).join('\n');
+  delete d.maker;
   if(!String(d.brand||'').trim())return toast('브랜드명은 비울 수 없어요');
   const btn=$('eSave');btn.disabled=true;
   try{await FS.updateDoc(FS.doc(db,'brand_applications',x.id),{status:$('eSt').value,assignee:$('eAs').value.trim().slice(0,40),memo:$('eMemo').value.trim().slice(0,3000),data:d,updatedAt:FS.serverTimestamp(),updatedBy:user.email});toast('저장했어요');closeM()}
