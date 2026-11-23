@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>에이트성수 무료 입점 신청 관리</title>
+<style>
+:root{--ink:#17171b;--sub:#6d6d76;--line:#e2e1dc;--bg:#f4f1ec;--card:#fff;--acc:#ff5a1f;--accd:#c93d08;--soft:#fff3ec}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.5;word-break:keep-all}
+.top{background:var(--ink);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top b{font-size:16px}.top .eb{font-size:11px;letter-spacing:.18em;font-weight:700;color:var(--acc)}
+.top .sp{flex:1}.top .me{font-size:13px;color:#c9c9cf}
+.wrap{max-width:1240px;margin:0 auto;padding:18px 14px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 14px;font:inherit;font-weight:700;font-size:14px;color:var(--ink);cursor:pointer}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}.btn.dk{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.sm{padding:5px 10px;font-size:12px}.btn.ghost{background:transparent;color:#fff;border-color:#55555c}
+.btn.del{color:#c0271b}
+.btn:disabled{opacity:.5;cursor:default}
+input,select,textarea{border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;font-size:15px;background:#fff;color:var(--ink);width:100%;min-width:0}
+textarea{min-height:70px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:1px}
+.auth{max-width:400px;margin:40px auto}
+.auth h1{font-size:22px;margin:0 0 4px}.auth p{color:var(--sub);margin:0 0 16px;font-size:14px}
+.auth input{margin-bottom:8px}
+.lnk{background:none;border:0;color:var(--accd);font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:4px 0}
+.muted{color:var(--sub);font-size:13px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer}
+.pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tw{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:14px;margin-top:12px}
+table{border-collapse:collapse;width:100%;min-width:900px}
+th,td{padding:10px 12px;border-bottom:1px solid #efeee9;text-align:left;vertical-align:top;font-size:14px}
+th{font-size:12px;color:var(--sub);background:#faf9f6;white-space:nowrap}
+tr.r{cursor:pointer}tr.r:hover{background:#fffaf7}
+.tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.nw{white-space:nowrap}
+.mbg{position:fixed;inset:0;background:rgba(20,20,24,.45);display:none;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto;z-index:20}
+.mbg.on{display:flex}
+.modal{background:#fff;border-radius:16px;width:min(860px,100%);padding:22px}
+.modal h2{margin:0 0 4px;font-size:20px}
+.fg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:#444}
+.w2{grid-column:span 2}.w4{grid-column:1/-1}
+.gt{font-size:12px;font-weight:800;color:var(--accd);margin:16px 0 6px;letter-spacing:.04em}
+.mfoot{display:flex;gap:8px;align-items:center;margin-top:18px;flex-wrap:wrap}.mfoot .sp{flex:1}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;font-weight:700;display:none;z-index:40}
+.vlist{margin:10px 0 0;padding:0;list-style:none}
+.vlist li{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #efeee9;font-size:14px}
+.vlist li b{flex:1;min-width:0;overflow-wrap:anywhere}
+.chk{display:flex;gap:6px;flex-wrap:wrap}.chk label{display:flex;gap:4px;align-items:center;font-weight:600;font-size:13px;border:1px solid var(--line);border-radius:999px;padding:5px 10px;cursor:pointer}
+.chk input{width:auto;accent-color:var(--acc)}
+.empty{text-align:center;color:var(--sub);padding:40px}
+@media(max-width:640px){.fg{grid-template-columns:1fr 1fr}.w2{grid-column:1/-1}}
+</style>
+<script src="config.js"></script>
+</head>
+<body>
+<div class="top"><div><div class="eb">EIGHT SEONGSU</div><b>무료 입점 신청 관리</b></div><span class="sp"></span><span class="me" id="me"></span><span id="topBtns"></span></div>
+<div class="wrap" id="app"><div class="card empty">불러오는 중…</div></div>
+<div class="mbg" id="mbg"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<script type="module">
+const SDK='https://www.gstatic.com/firebasejs/10.12.2/';
+const [A,AU,FS]=await Promise.all([import(SDK+'firebase-app.js'),import(SDK+'firebase-auth.js'),import(SDK+'firebase-firestore.js')]).catch(()=>{document.getElementById('app').innerHTML='<div class="card empty">인터넷 연결을 확인하고 새로고침해 주세요.</div>';throw new Error('sdk')});
+const app=A.initializeApp(window.FT_FIREBASE),auth=AU.getAuth(app),db=FS.getFirestore(app);
+const ST=['접수','검토','연락','입점 확정','보류','거절'];
+const STC={'접수':'#eef3ff;#2f55b5','검토':'#fff6dc;#8a6100','연락':'#f0e9ff;#5b35b0','입점 확정':'#17703a;#fff','보류':'#eee;#777','거절':'#f3dede;#a33'};
+const CATS=['스킨케어','메이크업','헤어·바디','이너뷰티','건강기능식품','맨즈','웰니스','향수','기타'];
+const CHS=['자사몰','스마트스토어','쿠팡','올리브영','약국','백화점·오프라인','해외','아직 없음'];
+const COL=['샘플·테스터 제공','매장 행사·시연','인플루언서 협업','SNS 공동 홍보','판촉물·POP 제공'];
+const DOCS=['사업자등록증 사본','제품 사진 (누끼·연출)','브랜드 소개서 또는 상세페이지','성분표·시험성적서','건강기능식품 신고·인증 서류 (해당 시)','기능성 화장품 심사·보고 자료 (해당 시)'];
+const F=[['01 브랜드·회사',[['brand','브랜드명 *','w2'],['company','회사명','w2'],['ceo','대표자'],['bizno','사업자등록번호'],['contact','담당자'],['role','직책'],['phone','연락처'],['email','이메일'],['insta','인스타그램','w2'],['site','홈페이지·스토어','w2']]],
+ ['02 제품',[['cats','카테고리','w4','m',CATS],['products','입점 희망 제품','w4','ta'],['priceRange','소비자가 범위'],['rate','희망 공급률(%)'],['maker','제조사'],['target','주요 고객층'],['channels','판매 채널','w4','m',CHS],['channelEtc','그 외 판매 채널','w4'],['intro','브랜드 소개','w4','ta'],['strength','제품 강점','w4','ta']]],
+ ['03 협력·일정',[['collab','협력 가능 활동','w4','m',COL],['start','희망 입점 시기','w2'],['date','신청일','w2'],['etc','문의·요청 사항','w4','ta']]]];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast=t=>{const el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>el.style.display='none',2400)};
+const tag=s=>{const[b,f]=(STC[s]||'#eee;#555').split(';');return `<span class="tag" style="background:${b};color:${f}">${esc(s)}</span>`};
+const when=t=>t&&t.toDate?(d=>`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`)(t.toDate()):'';
+let user=null,role='',L=[],VW=[],unsub=null,unsubV=null,q='',fs='',mode='login';
+
+/* ── 로그인·가입 ── */
+function authView(msg){
+  $('me').textContent='';$('topBtns').innerHTML='';
+  const t={login:['로그인','관리자에게 등록된 메일로 로그인하세요.'],join:['계정 만들기','처음이라면 여기서 계정을 만든 뒤, 메일로 온 인증 링크를 눌러 주세요.'],reset:['비밀번호 재설정','가입한 메일로 재설정 링크를 보내드려요.']}[mode];
+  $('app').innerHTML=`<div class="card auth"><h1>${t[0]}</h1><p>${t[1]}</p>${msg?`<p style="color:#c0271b;font-weight:700">${esc(msg)}</p>`:''}
+    <input id="em" type="email" placeholder="이메일" autocomplete="username">
+    ${mode!=='reset'?`<input id="pw" type="password" placeholder="비밀번호${mode==='join'?' (6자 이상)':''}" autocomplete="${mode==='join'?'new-password':'current-password'}">`:''}
+    ${mode==='join'?'<input id="pw2" type="password" placeholder="비밀번호 확인" autocomplete="new-password">':''}
+    <button class="btn pri" id="go" style="width:100%;padding:12px;margin-top:4px">${t[0]}</button>
+    <div class="row" style="justify-content:space-between;margin-top:10px">${mode==='login'?'<button class="lnk" data-m="join">계정 만들기</button><button class="lnk" data-m="reset">비밀번호를 잊었어요</button>':'<button class="lnk" data-m="login">← 로그인으로</button>'}</div></div>`;
+  $('go').onclick=doAuth;['em','pw','pw2'].forEach(i=>{const el=$(i);if(el)el.onkeydown=e=>{if(e.key==='Enter')doAuth()}});
+  document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{mode=b.dataset.m;authView()});
+}
+async function doAuth(){
+  const em=($('em').value||'').trim().toLowerCase(),pw=$('pw')?$('pw').value:'';
+  if(!em)return toast('이메일을 넣어 주세요');
+  try{
+    if(mode==='login'){if(!pw)return toast('비밀번호를 넣어 주세요');await AU.signInWithEmailAndPassword(auth,em,pw)}
+    else if(mode==='join'){if(pw.length<6)return toast('비밀번호는 6자 이상');if(pw!==$('pw2').value)return toast('비밀번호가 서로 달라요');
+      const c=await AU.createUserWithEmailAndPassword(auth,em,pw);await AU.sendEmailVerification(c.user);toast('인증 메일을 보냈어요');mode='login'}
+    else{await AU.sendPasswordResetEmail(auth,em);toast('재설정 메일을 보냈어요');mode='login';authView()}
+  }catch(x){const c=x&&x.code||'';authView(c==='auth/email-already-in-use'?'이미 가입된 메일이에요. 로그인해 주세요.':c==='auth/invalid-email'?'메일 주소를 확인해 주세요.':c==='auth/too-many-requests'?'시도가 너무 많아요. 잠시 뒤 다시 해 주세요.':c==='auth/network-request-failed'?'인터넷 연결을 확인해 주세요.':mode==='login'?'이메일이나 비밀번호가 맞지 않아요.':'처리하지 못했어요. ('+c+')')}
+}
+function noAccess(kind){
+  const em=user.email;
+  $('app').innerHTML=`<div class="card auth" style="text-align:center"><h1>${kind==='verify'?'메일 인증이 필요해요':'아직 권한이 없어요'}</h1>
+    <p>${kind==='verify'?`<b>${esc(em)}</b>로 보낸 인증 링크를 누른 뒤 아래 버튼을 눌러 주세요.`:`<b>${esc(em)}</b> 계정은 아직 등록되지 않았어요. 관리자에게 이 메일을 등록해 달라고 요청해 주세요.`}</p>
+    <div class="row" style="justify-content:center">${kind==='verify'?'<button class="btn" id="rs">인증 메일 다시 보내기</button>':''}<button class="btn pri" id="re">다시 확인</button></div></div>`;
+  $('re').onclick=async()=>{await user.reload();await user.getIdToken(true);start(auth.currentUser)};
+  if($('rs'))$('rs').onclick=async()=>{try{await AU.sendEmailVerification(user);toast('인증 메일을 다시 보냈어요')}catch(e){toast('잠시 뒤 다시 해 주세요')}};
+}
+
+/* ── 권한 확인 ── */
+async function start(u){
+  user=u;if(unsub){unsub();unsub=null}if(unsubV){unsubV();unsubV=null}role='';L=[];VW=[];
+  if(!u){authView();return}
+  $('me').textContent=u.email;$('topBtns').innerHTML='<button class="btn sm ghost" id="out">로그아웃</button>';$('out').onclick=()=>AU.signOut(auth);
+  $('app').innerHTML='<div class="card empty">권한 확인 중…</div>';
+  // 1) 대표 관리자인가: 하위 관리자 목록을 읽을 수 있으면 대표 관리자
+  try{await FS.getDocs(FS.query(FS.collection(db,'brand_viewers'),FS.limit(1)));role='owner'}catch(e){}
+  if(!role){
+    if(!u.emailVerified)return noAccess('verify');
+    try{const d=await FS.getDoc(FS.doc(db,'brand_viewers',u.email.toLowerCase()));if(d.exists())role='viewer'}catch(e){}
+    if(!role)return noAccess('none');
+  }
+  unsub=FS.onSnapshot(FS.collection(db,'brand_applications'),sn=>{L=sn.docs.map(d=>Object.assign({id:d.id},d.data()));paint()},e=>{$('app').innerHTML=`<div class="card empty">신청서를 불러오지 못했어요. (${esc(e.code||'')})</div>`});
+  if(role==='owner')unsubV=FS.onSnapshot(FS.collection(db,'brand_viewers'),sn=>{VW=sn.docs.map(d=>Object.assign({id:d.id},d.data()));paint()},()=>{});
+}
+AU.onAuthStateChanged(auth,start);
+
+/* ── 목록 ── */
+function paint(){
+  if($('mbg').classList.contains('on'))return;
+  const ql=q.trim().toLowerCase(),cnt=s=>L.filter(x=>(x.status||'접수')===s).length;
+  const R=L.filter(x=>(!fs||(x.status||'접수')===fs)&&(!ql||[x.no,x.memo,x.assignee,...Object.values(x.data||{}).map(v=>Array.isArray(v)?v.join(' '):v)].join(' ').toLowerCase().includes(ql)))
+    .sort((a,b)=>(b.createdAt&&b.createdAt.seconds||0)-(a.createdAt&&a.createdAt.seconds||0));
+  const pill=(v,t,n)=>`<button class="pill ${fs===v?'on':''}" data-fs="${esc(v)}">${esc(t)} <span style="opacity:.6">${n}</span></button>`;
+  $('app').innerHTML=`${role==='owner'?`<div class="card" style="margin-bottom:12px"><div class="row"><b style="flex:1">하위 관리자 <span class="muted">${VW.length}명 · 신청서만 보고 수정할 수 있어요</span></b><button class="btn sm" id="vT">${window.__vOpen?'접기':'관리'}</button></div>
+      ${window.__vOpen?`<div class="row" style="margin-top:10px"><input id="vEm" type="email" placeholder="추가할 메일" style="flex:2;min-width:200px"><input id="vMemo" placeholder="메모 (이름·소속)" style="flex:1;min-width:140px"><button class="btn pri" id="vAdd">추가</button></div>
+      <p class="muted" style="margin:8px 0 0">추가한 사람은 이 페이지에서 <b>계정 만들기</b> → 메일 인증 → 로그인하면 신청서를 볼 수 있어요. 다른 페이지나 데이터는 볼 수 없어요.</p>
+      <ul class="vlist">${VW.map(v=>`<li><b>${esc(v.id)}</b><span class="muted">${esc(v.memo||'')}</span><button class="btn sm del" data-vdel="${esc(v.id)}">삭제</button></li>`).join('')||'<li class="muted">아직 없어요</li>'}</ul>`:''}</div>`:''}
+    <div class="card"><div class="row"><input id="q" placeholder="브랜드·회사·담당자·연락처·메모 검색" value="${esc(q)}" style="flex:1;min-width:220px"><span class="muted">총 ${L.length}건</span></div>
+      <div class="pills" style="margin-top:10px">${pill('','전체',L.length)}${ST.map(s=>pill(s,s,cnt(s))).join('')}</div></div>
+    ${R.length?`<div class="tw"><table><tr><th>접수</th><th>상태</th><th>브랜드</th><th>카테고리</th><th>담당자·연락처</th><th>인스타·사이트</th><th>공급률</th><th>우리 담당</th><th>메모</th></tr>
+      ${R.map(x=>{const d=x.data||{};return `<tr class="r" data-id="${esc(x.id)}"><td class="nw">${when(x.createdAt)}<div class="muted">${esc(x.no)}</div></td><td>${tag(x.status||'접수')}</td>
+        <td><b>${esc(d.brand)}</b><div class="muted">${esc(d.company||'')}</div></td><td>${esc((d.cats||[]).join(', '))}</td>
+        <td>${esc(d.contact||'')} <span class="muted">${esc(d.role||'')}</span><div class="muted">${esc(d.phone||'')}${d.phone&&d.email?' · ':''}${esc(d.email||'')}</div></td>
+        <td>${esc(d.insta||'')}<div class="muted">${esc(String(d.site||'').replace(/^https?:\/\/(www\.)?/,'').slice(0,30))}</div></td>
+        <td class="nw">${d.rate?esc(d.rate)+'%':''}</td><td class="nw">${esc(x.assignee||'')}</td><td class="muted" style="max-width:220px">${esc(String(x.memo||'').slice(0,60))}</td></tr>`}).join('')}</table></div>`
+      :`<div class="card empty" style="margin-top:12px">${L.length?'조건에 맞는 신청이 없어요.':'아직 들어온 신청이 없어요.'}</div>`}`;
+  const qi=$('q');qi.oninput=()=>{q=qi.value;clearTimeout(paint.t);paint.t=setTimeout(()=>{paint();const e=$('q');e.focus();e.setSelectionRange(e.value.length,e.value.length)},250)};
+  document.querySelectorAll('[data-fs]').forEach(b=>b.onclick=()=>{fs=b.dataset.fs;paint()});
+  document.querySelectorAll('tr.r').forEach(r=>r.onclick=()=>openApp(r.dataset.id));
+  if($('vT'))$('vT').onclick=()=>{window.__vOpen=!window.__vOpen;paint()};
+  if($('vAdd'))$('vAdd').onclick=addViewer;
+  document.querySelectorAll('[data-vdel]').forEach(b=>b.onclick=()=>delViewer(b.dataset.vdel));
+}
+async function addViewer(){
+  const em=($('vEm').value||'').trim().toLowerCase(),memo=($('vMemo').value||'').trim().slice(0,60);
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return toast('메일 주소를 확인해 주세요');
+  if(VW.some(v=>v.id===em))return toast('이미 등록된 메일이에요');
+  try{await FS.setDoc(FS.doc(db,'brand_viewers',em),{addedAt:FS.serverTimestamp(),memo});toast('추가했어요 — '+em)}catch(e){toast('추가하지 못했어요 ('+(e.code||'')+')')}
+}
+let delAsk='';
+async function delViewer(em){
+  if(delAsk!==em){delAsk=em;toast('한 번 더 누르면 '+em+' 권한을 삭제해요');setTimeout(()=>{if(delAsk===em)delAsk=''},4000);return}
+  delAsk='';try{await FS.deleteDoc(FS.doc(db,'brand_viewers',em));toast('삭제했어요')}catch(e){toast('삭제하지 못했어요')}
+}
+
+/* ── 상세·수정 ── */
+function openApp(id){
+  const x=L.find(a=>a.id===id);if(!x)return;const d=x.data||{};
+  const fld=([k,l,cls,type,opts])=>{const v=d[k];
+    if(type==='m')return `<div class="f ${cls||''}">${l}<div class="chk" data-mk="${k}">${opts.concat((Array.isArray(v)?v:[]).filter(o=>!opts.includes(o))).map(o=>`<label><input type="checkbox" value="${esc(o)}" ${(Array.isArray(v)?v:[]).includes(o)?'checked':''}>${esc(o)}</label>`).join('')}</div></div>`;
+    if(type==='ta')return `<label class="f ${cls||''}">${l}<textarea data-k="${k}">${esc(v||'')}</textarea></label>`;
+    return `<label class="f ${cls||''}">${l}<input data-k="${k}" value="${esc(v||'')}"></label>`};
+  $('modal').innerHTML=`<h2>${esc(d.brand)}</h2><div class="muted">${esc(x.no)} · 접수 ${when(x.createdAt)}${x.updatedBy?` · 마지막 수정 ${when(x.updatedAt)} ${esc(x.updatedBy)}`:''}</div>
+    <div class="fg" style="margin-top:14px"><label class="f">상태<select id="eSt">${ST.map(s=>`<option ${s===(x.status||'접수')?'selected':''}>${s}</option>`).join('')}</select></label>
+      <label class="f">우리 담당<input id="eAs" value="${esc(x.assignee||'')}" placeholder="이름"></label>
+      <label class="f w2">내부 메모<textarea id="eMemo" style="min-height:42px" placeholder="검토 의견, 연락 내용">${esc(x.memo||'')}</textarea></label></div>
+    ${F.map(([t,fs])=>`<div class="gt">${t}</div><div class="fg">${fs.map(fld).join('')}</div>`).join('')}
+    <div class="gt">04 준비된 자료</div><div class="chk" data-dk="docs">${DOCS.map((t,i)=>`<label><input type="checkbox" value="${i}" ${(d.docs||[]).includes(i)?'checked':''}>${esc(t)}</label>`).join('')}</div>
+    <div class="muted" style="margin-top:10px">개인정보 수집·이용 동의 ${d.agreeP?'예':'아니오'}</div>
+    <div class="mfoot">${role==='owner'?'<button class="btn del" id="eDel">신청 삭제</button>':''}<span class="sp"></span><button class="btn" id="eX">닫기</button><button class="btn pri" id="eSave">저장</button></div>`;
+  $('mbg').classList.add('on');
+  $('eX').onclick=closeM;$('eSave').onclick=()=>saveApp(x);
+  if($('eDel'))$('eDel').onclick=()=>delApp(x);
+}
+function closeM(){$('mbg').classList.remove('on');paint()}
+$('mbg').addEventListener('click',e=>{if(e.target.id==='mbg')closeM()});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&$('mbg').classList.contains('on'))closeM()});
+async function saveApp(x){
+  const d=Object.assign({},x.data||{});
+  document.querySelectorAll('#modal [data-k]').forEach(el=>{d[el.dataset.k]=el.value.trim().slice(0,2000)});
+  document.querySelectorAll('#modal [data-mk]').forEach(box=>{d[box.dataset.mk]=[...box.querySelectorAll('input:checked')].map(i=>i.value)});
+  d.docs=[...document.querySelectorAll('#modal [data-dk] input:checked')].map(i=>+i.value);
+  if(!String(d.brand||'').trim())return toast('브랜드명은 비울 수 없어요');
+  const btn=$('eSave');btn.disabled=true;
+  try{await FS.updateDoc(FS.doc(db,'brand_applications',x.id),{status:$('eSt').value,assignee:$('eAs').value.trim().slice(0,40),memo:$('eMemo').value.trim().slice(0,3000),data:d,updatedAt:FS.serverTimestamp(),updatedBy:user.email});toast('저장했어요');closeM()}
+  catch(e){btn.disabled=false;toast('저장하지 못했어요 ('+(e.code||'')+')')}
+}
+let delA='';
+async function delApp(x){
+  if(delA!==x.id){delA=x.id;toast('한 번 더 누르면 이 신청을 완전히 삭제해요');setTimeout(()=>{if(delA===x.id)delA=''},4000);return}
+  delA='';try{await FS.deleteDoc(FS.doc(db,'brand_applications',x.id));toast('삭제했어요');closeM()}catch(e){toast('삭제하지 못했어요')}
+}
+</script>
+</body>
+</html>
