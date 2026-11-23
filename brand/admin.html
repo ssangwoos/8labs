@@ -195,6 +195,8 @@ function openApp(id){
     <div class="mfoot">${role==='owner'?'<button class="btn del" id="eDel">신청 삭제</button>':''}<span class="sp"></span><button class="btn" id="eX">닫기</button><button class="btn pri" id="eSave">저장</button></div>`;
   $('mbg').classList.add('on');
   $('eIts').onclick=e=>{const b=e.target.closest('[data-ix]');if(b)b.closest('.itr').remove()};
+  $('eIts').oninput=e=>{const el=e.target;if(!['price','supply'].includes(el.dataset.if))return;const raw=el.value,pos=el.selectionStart||raw.length,before=raw.slice(0,pos).replace(/[^0-9]/g,'').length,n=raw.replace(/[^0-9]/g,'').replace(/^0+(?=\d)/,'');const v=n?Number(n).toLocaleString('ko-KR'):'';el.value=v;let k=0,c=0;while(c<v.length&&k<before){if(/[0-9]/.test(v[c]))k++;c++}try{el.setSelectionRange(c,c)}catch(x){}
+    const r=el.closest('.itr'),a=num(r.querySelector('[data-if=price]').value),b=num(r.querySelector('[data-if=supply]').value);r.querySelector('span.muted').textContent=a&&b?Math.round(b/a*100)+'%':''};
   $('eItAdd').onclick=()=>{$('eIts').insertAdjacentHTML('beforeend',itRows({items:[{}]}))};
   $('eX').onclick=closeM;$('eSave').onclick=()=>saveApp(x);
   if($('eDel'))$('eDel').onclick=()=>delApp(x);
