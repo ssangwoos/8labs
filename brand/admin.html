@@ -38,10 +38,11 @@ th{font-size:12px;color:var(--sub);background:#faf9f6;white-space:nowrap}
 tr.r{cursor:pointer}tr.r:hover{background:#fffaf7}
 .tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
 .nw{white-space:nowrap}
-.mbg{position:fixed;inset:0;background:rgba(20,20,24,.45);display:none;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto;z-index:20}
-.mbg.on{display:flex}
-.modal{background:#fff;border-radius:16px;width:min(860px,100%);padding:22px}
-.modal h2{margin:0 0 4px;font-size:20px}
+#mbg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(20,20,24,.45);display:none;padding:24px 12px;overflow-y:auto;z-index:2147483000;transform:none;opacity:1}
+#mbg.on{display:block}
+#modal{display:block;position:relative;background:#fff;border-radius:16px;width:auto;max-width:860px;height:auto;max-height:none;min-height:0;margin:0 auto 24px;padding:22px;flex:none;float:none;overflow:visible;transform:none;opacity:1;top:auto;left:auto}
+#modal h2{margin:0 0 4px;font-size:20px}
+#modal .fg{display:grid}#modal .mfoot{display:flex}
 .fg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:#444}
 .w2{grid-column:span 2}.w4{grid-column:1/-1}
@@ -62,7 +63,7 @@ tr.r{cursor:pointer}tr.r:hover{background:#fffaf7}
 <body>
 <div class="top"><div><div class="eb">EIGHT SEONGSU</div><b>무료 입점 신청 관리</b></div><span class="sp"></span><span class="me" id="me"></span><span id="topBtns"></span></div>
 <div class="wrap" id="app"><div class="card empty">불러오는 중…</div></div>
-<div class="mbg" id="mbg"><div class="modal" id="modal"></div></div>
+<div id="mbg"><div id="modal"></div></div>
 <div class="toast" id="toast"></div>
 <script type="module">
 const SDK='https://www.gstatic.com/firebasejs/10.12.2/';
